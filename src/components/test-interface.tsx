@@ -32,11 +32,7 @@ const PaletteContent = ({
   onSubmit: () => void;
 }) => {
   return (
-    <div className="flex flex-col h-full">
-      <SheetHeader className="md:hidden mb-4">
-        <SheetTitle>Question Palette</SheetTitle>
-      </SheetHeader>
-      <h3 className="hidden md:block text-lg font-semibold mb-4 text-center">Question Palette</h3>
+    <>
       <ScrollArea className="flex-1">
         <div className="grid grid-cols-5 gap-2 pr-2">
           {session.questions.map((_, index) => {
@@ -89,7 +85,7 @@ const PaletteContent = ({
               </AlertDialogFooter>
           </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 };
 
@@ -308,7 +304,12 @@ export function TestInterface({ testId }: { testId: string }) {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right" className="w-[300px] p-4 flex flex-col">
-                            <PaletteContent session={session} currentQuestionIndex={currentQuestionIndex} onQuestionSelect={handleQuestionSelect} onSubmit={submitTest}/>
+                            <SheetHeader className="mb-4 text-center">
+                                <SheetTitle>Question Palette</SheetTitle>
+                            </SheetHeader>
+                            <div className="flex-1 min-h-0">
+                                <PaletteContent session={session} currentQuestionIndex={currentQuestionIndex} onQuestionSelect={handleQuestionSelect} onSubmit={submitTest}/>
+                            </div>
                         </SheetContent>
                     </Sheet>
                 </div>
@@ -360,6 +361,7 @@ export function TestInterface({ testId }: { testId: string }) {
         </div>
       </main>
       <aside className="hidden md:flex w-80 border-l p-4 bg-card flex-col">
+        <h3 className="text-lg font-semibold mb-4 text-center">Question Palette</h3>
         <PaletteContent session={session} currentQuestionIndex={currentQuestionIndex} onQuestionSelect={handleQuestionSelect} onSubmit={submitTest}/>
       </aside>
     </div>
