@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import type { TestSession, UserAnswer, Question, TestResult } from '@/lib/types';
@@ -11,12 +11,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { toast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Bookmark, Circle, CheckCircle, XCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { ChevronLeft, ChevronRight, Bookmark, Circle, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser, useFirestore } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { doc, writeBatch } from 'firebase/firestore';
 
 
 const Palette = ({
@@ -75,12 +74,14 @@ const Palette = ({
 
 export function TestInterface({ testId }: { testId: string }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [session, setSession] = useState<TestSession | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const { user } = useUser();
   const firestore = useFirestore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const sessionData = localStorage.getItem(`test_session_${testId}`);
@@ -110,7 +111,7 @@ export function TestInterface({ testId }: { testId: string }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, session]);
   
-  const submitTest = useCallback(() => {
+  const submitTest = useCallback(async () => {
     if (!session || !user || !firestore) {
         if (!user) {
             toast({ title: 'Not Signed In', description: 'Please sign in to save your results.', variant: 'destructive'});
@@ -118,75 +119,92 @@ export function TestInterface({ testId }: { testId: string }) {
         return;
     };
     
-    const endTime = Date.now();
-    let correctAnswers = 0;
-    let incorrectAnswers = 0;
-    let skipped = 0;
+    setIsSubmitting(true);
 
-    session.questions.forEach((q, i) => {
-        const userAnswer = session.userAnswers[i];
-        if (userAnswer.status === 'not-visited' || userAnswer.status === 'not-answered' || userAnswer.status === 'marked-for-review') {
-            skipped++;
-        } else if (userAnswer.selectedOption === q.correctAnswerIndex) {
-            correctAnswers++;
-        } else {
-            incorrectAnswers++;
-        }
-    });
-    
-    const attempted = correctAnswers + incorrectAnswers;
-    const accuracy = attempted > 0 ? (correctAnswers / attempted) * 100 : 0;
-    
-    let score = correctAnswers;
-    if(session.config.negativeMarking && session.config.negativeMarkingRatio) {
-        score -= incorrectAnswers * session.config.negativeMarkingRatio;
-    }
+    try {
+        const endTime = Date.now();
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
+        let skipped = 0;
 
-    const performanceBreakdown: import('@/lib/types').PerformanceBreakdown[] = [];
-
-    if (session.config.topic || session.config.subject) {
-        const categoryName = session.config.topic || session.config.subject!;
-        const attemptedInCategory = correctAnswers + incorrectAnswers;
-        const accuracyInCategory = attemptedInCategory > 0 ? (correctAnswers / attemptedInCategory) * 100 : 0;
-        
-        performanceBreakdown.push({
-            category: categoryName,
-            accuracy: accuracyInCategory,
-            correctCount: correctAnswers,
-            incorrectCount: incorrectAnswers,
-            skippedCount: skipped,
-            totalCount: session.questions.length,
+        session.questions.forEach((q, i) => {
+            const userAnswer = session.userAnswers[i];
+            if (userAnswer.status === 'not-visited' || userAnswer.status === 'not-answered' || userAnswer.status === 'marked-for-review') {
+                skipped++;
+            } else if (userAnswer.selectedOption === q.correctAnswerIndex) {
+                correctAnswers++;
+            } else {
+                incorrectAnswers++;
+            }
         });
+        
+        const attempted = correctAnswers + incorrectAnswers;
+        const accuracy = attempted > 0 ? (correctAnswers / attempted) * 100 : 0;
+        
+        let score = correctAnswers;
+        if(session.config.negativeMarking && session.config.negativeMarkingRatio) {
+            score -= incorrectAnswers * session.config.negativeMarkingRatio;
+        }
+
+        const performanceBreakdown: import('@/lib/types').PerformanceBreakdown[] = [];
+
+        if (session.config.topic || session.config.subject) {
+            const categoryName = session.config.topic || session.config.subject!;
+            const attemptedInCategory = correctAnswers + incorrectAnswers;
+            const accuracyInCategory = attemptedInCategory > 0 ? (correctAnswers / attemptedInCategory) * 100 : 0;
+            
+            performanceBreakdown.push({
+                category: categoryName,
+                accuracy: accuracyInCategory,
+                correctCount: correctAnswers,
+                incorrectCount: incorrectAnswers,
+                skippedCount: skipped,
+                totalCount: session.questions.length,
+            });
+        }
+
+        const result: TestResult = {
+            id: session.id,
+            userId: user.uid,
+            config: session.config,
+            score,
+            accuracy,
+            totalQuestions: session.questions.length,
+            correctAnswers,
+            incorrectAnswers,
+            skipped,
+            date: new Date(session.startTime).toISOString(),
+            timeTaken: Math.floor((endTime - session.startTime) / 1000),
+            performanceBreakdown,
+        };
+        
+        const finalSession: TestSession = { ...session, userId: user.uid, endTime: endTime };
+        
+        const batch = writeBatch(firestore);
+
+        const resultRef = doc(firestore, 'users', user.uid, 'testResults', session.id);
+        batch.set(resultRef, result);
+
+        const sessionRef = doc(firestore, 'users', user.uid, 'userTests', session.id);
+        batch.set(sessionRef, finalSession);
+
+        await batch.commit();
+        
+        localStorage.removeItem(`test_session_${session.id}`);
+
+        toast({ title: 'Test Submitted! 🎉', description: 'Your results have been saved. Redirecting...' });
+        router.replace(`/results/${session.id}`);
+
+    } catch (error) {
+        console.error("Failed to submit test:", error);
+        toast({
+            title: "Submission Failed",
+            description: "Could not save your test results. Please check your connection and try again.",
+            variant: "destructive",
+        });
+        setIsSubmitting(false);
     }
-
-    const result: TestResult = {
-        id: session.id,
-        userId: user.uid,
-        config: session.config,
-        score,
-        accuracy,
-        totalQuestions: session.questions.length,
-        correctAnswers,
-        incorrectAnswers,
-        skipped,
-        date: new Date(session.startTime).toISOString(),
-        timeTaken: Math.floor((endTime - session.startTime) / 1000),
-        performanceBreakdown,
-    };
-    
-    const finalSession: TestSession = { ...session, userId: user.uid, endTime: endTime };
-
-    const resultRef = doc(firestore, 'users', user.uid, 'testResults', session.id);
-    setDocumentNonBlocking(resultRef, result, { merge: false });
-
-    const sessionRef = doc(firestore, 'users', user.uid, 'userTests', session.id);
-    setDocumentNonBlocking(sessionRef, finalSession, { merge: false });
-    
-    localStorage.removeItem(`test_session_${session.id}`);
-
-    toast({ title: 'Test Submitted! 🎉', description: 'Your results have been saved to your profile.' });
-    router.replace(`/results/${session.id}`);
-  }, [session, router, user, firestore]);
+  }, [session, router, user, firestore, toast]);
 
 
   useEffect(() => {
@@ -312,7 +330,7 @@ export function TestInterface({ testId }: { testId: string }) {
                     <Button onClick={() => setCurrentQuestionIndex(p => Math.min(session.questions.length - 1, p + 1))}>Save & Next <ChevronRight className="ml-2 h-4 w-4"/></Button>
                   ) : (
                      <AlertDialog>
-                        <AlertDialogTrigger asChild><Button variant="default">Review & Submit</Button></AlertDialogTrigger>
+                        <AlertDialogTrigger asChild><Button variant="default">Submit Test</Button></AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Ready to finish?</AlertDialogTitle>
@@ -322,7 +340,16 @@ export function TestInterface({ testId }: { testId: string }) {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={submitTest}>Submit</AlertDialogAction>
+                                <AlertDialogAction onClick={submitTest} disabled={isSubmitting}>
+                                  {isSubmitting ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Submitting...
+                                    </>
+                                  ) : (
+                                    'Submit'
+                                  )}
+                                </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
