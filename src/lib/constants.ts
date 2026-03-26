@@ -1,3 +1,4 @@
+
 export const EXAMS = [
   // UPSC
   "UPSC CSE", "UPSC CAPF", "UPSC CDS", "UPSC NDA", "UPSC IES", "UPSC Geo-Scientist",
@@ -11,40 +12,40 @@ export const EXAMS = [
   "RRB NTPC", "RRB Group D", "RRB JE", "RRB ALP",
   // Defence
   "AFCAT", "INET", "Territorial Army",
-  // State PSC
+  // State PSCs
   "BPSC", "UPPSC", "MPPSC", "RPSC", "JPSC", "HPSC", "WBPSC",
-  // Other
-  "CUET", "UGC NET", "CSIR NET", "GATE", "CAT"
+  // Other Major Exams
+  "CUET", "UGC NET", "CSIR NET", "GATE", "CAT", "LIC AAO", "LIC ADO", "NABARD Grade A", "SEBI Grade A"
 ];
 
 export const SUBJECTS: { [key: string]: string[] } = {
   // UPSC
   "UPSC CSE": ["History", "Polity", "Geography", "Economy", "Science & Technology", "Environment", "Current Affairs", "CSAT"],
-  "UPSC CAPF": ["General Mental Ability", "General Science", "Current Events", "Indian Polity and Economy", "History of India", "Indian and World Geography", "General English"],
+  "UPSC CAPF": ["General Mental Ability", "General Science", "Current Events", "Indian Polity and Economy", "History of India", "Indian and World Geography"],
   "UPSC CDS": ["English", "General Knowledge", "Elementary Mathematics"],
   "UPSC NDA": ["Mathematics", "General Ability Test"],
   // SSC
-  "SSC CGL": ["Quantitative Aptitude", "Reasoning", "English", "General Awareness"],
-  "SSC CHSL": ["Quantitative Aptitude", "Reasoning", "English", "General Awareness"],
+  "SSC CGL": ["Quantitative Aptitude", "General Intelligence & Reasoning", "English Language & Comprehension", "General Awareness"],
+  "SSC CHSL": ["Quantitative Aptitude", "General Intelligence & Reasoning", "English Language", "General Awareness"],
   "SSC MTS": ["Numerical and Mathematical Ability", "Reasoning Ability and Problem Solving", "General Awareness", "English Language and Comprehension"],
   "SSC GD": ["General Intelligence & Reasoning", "General Knowledge & General Awareness", "Elementary Mathematics", "English/Hindi"],
   "SSC CPO": ["General Intelligence & Reasoning", "General Knowledge & General Awareness", "Quantitative Aptitude", "English Comprehension"],
-  "SSC JE": ["General Intelligence & Reasoning", "General Awareness", "Technical Subject"],
+  "SSC JE": ["General Intelligence & Reasoning", "General Awareness", "Technical Subject (Civil/Electrical/Mechanical)"],
   // Banking
-  "IBPS PO": ["Quantitative Aptitude", "Reasoning", "English", "General Awareness", "Computer Knowledge"],
-  "IBPS Clerk": ["Quantitative Aptitude", "Reasoning", "English", "General Awareness", "Computer Knowledge"],
+  "IBPS PO": ["Quantitative Aptitude", "Reasoning Ability", "English Language", "General, Economy & Banking Awareness", "Computer Aptitude"],
+  "IBPS Clerk": ["Quantitative Aptitude", "Reasoning Ability", "English Language", "General/Financial Awareness"],
   "IBPS RRB Officer Scale I": ["Reasoning", "Quantitative Aptitude", "English/Hindi", "Computer Knowledge", "General Awareness"],
   "IBPS RRB Office Assistant": ["Reasoning", "Quantitative Aptitude", "English/Hindi", "Computer Knowledge", "General Awareness"],
-  "SBI PO": ["Quantitative Aptitude", "Reasoning Ability", "English Language", "General/Economy/Banking Awareness", "Computer Aptitude"],
+  "SBI PO": ["Quantitative Aptitude", "Reasoning Ability", "English Language", "Data Analysis & Interpretation", "General/Economy/Banking Awareness", "Computer Aptitude"],
   "SBI Clerk": ["Quantitative Aptitude", "Reasoning Ability", "English Language", "General/Financial Awareness"],
   "RBI Grade B": ["General Awareness", "English Language", "Quantitative Aptitude", "Reasoning", "Economic and Social Issues", "Finance and Management"],
   "RBI Assistant": ["English Language", "Numerical Ability", "Reasoning Ability"],
   // Railways
   "RRB NTPC": ["Mathematics", "General Intelligence and Reasoning", "General Awareness"],
-  "RRB Group D": ["Mathematics", "General Intelligence and Reasoning", "General Science", "General Awareness and Current Affairs"],
+  "RRB Group D": ["General Science", "Mathematics", "General Intelligence and Reasoning", "General Awareness and Current Affairs"],
   "RRB JE": ["Mathematics", "General Intelligence and Reasoning", "General Awareness", "General Science", "Technical Abilities"],
   "RRB ALP": ["Mathematics", "General Intelligence and Reasoning", "General Science", "General Awareness on Current Affairs"],
-  // State PSC
+  // State PSCs
   "BPSC": ["General Studies", "Optional Paper"],
   "UPPSC": ["General Studies", "CSAT", "Optional Paper"],
   // Other
@@ -55,40 +56,57 @@ export const SUBJECTS: { [key: string]: string[] } = {
 
 export const TOPICS: { [key: string]: { [key: string]: string[] } } = {
   "UPSC CSE": {
-    "History": ["Ancient India", "Medieval India", "Modern India - Indian National Movement", "Art & Culture", "World History"],
-    "Polity": ["Constitutional Framework", "System of Government", "Central Government", "State Government", "Judiciary", "Local Government", "Constitutional Bodies"],
-    "Geography": ["Physical Geography", "Indian Geography", "World Geography", "Human Geography"],
-    "Economy": ["National Income", "Money and Banking", "Budgeting and Fiscal Policy", "Indian Agriculture", "Economic Reforms", "Poverty and Unemployment"],
-    "Science & Technology": ["Biotechnology", "Space Technology", "Defence Technology", "Information Technology", "Health and Diseases"],
-    "Environment": ["Ecology and Biodiversity", "Climate Change", "Environmental Pollution", "Conservation"],
-    "CSAT": ["Comprehension", "Interpersonal skills including communication skills", "Logical reasoning and analytical ability", "Decision making and problem solving", "General mental ability", "Basic numeracy"]
-  },
-  "UPSC CAPF": {
-    "General Mental Ability": ["Logical Reasoning", "Quantitative Aptitude", "Data Interpretation"],
-    "General Science": ["Physics", "Chemistry", "Biology", "Everyday Science"],
-    "Current Events": ["National and International Importance"],
-    "Indian Polity and Economy": ["Indian Constitution", "Indian Economy and Planning", "Governance"],
-    "History of India": ["Ancient", "Medieval", "Modern - Freedom Struggle"],
-    "Indian and World Geography": ["Physical", "Social", "Economic Geography of India and the World"]
+    "History": ["Ancient India (Prehistoric, Indus Valley, Vedic, Mauryan, Post-Mauryan)", "Medieval India (Sultanate, Mughal, Vijayanagar)", "Modern India (British Conquest, Social-Religious Reforms, Indian National Movement)", "Art & Culture", "World History"],
+    "Polity": ["Constitutional Framework & Preamble", "Fundamental Rights & Duties, DPSP", "System of Government (Parliamentary, Federal)", "Central Government (President, Parliament, Judiciary)", "State Government", "Judiciary System", "Local Government & Panchayati Raj", "Constitutional & Non-Constitutional Bodies"],
+    "Geography": ["Physical Geography (Geomorphology, Climatology, Oceanography)", "Indian Geography (Physical Features, Rivers, Climate, Minerals)", "World Geography", "Human & Economic Geography"],
+    "Economy": ["National Income & Measurement", "Money, Banking & Financial Markets", "Budgeting & Fiscal Policy", "Indian Agriculture", "Economic Reforms, LPG", "Poverty, Inclusion & Demographics", "External Sector"],
+    "Science & Technology": ["Biotechnology & Health", "Space Technology & ISRO", "Defence Technology", "IT, Computers & Robotics", "Nuclear Technology", "Recent Developments"],
+    "Environment": ["Ecology, Ecosystem & Biodiversity", "Climate Change & Global Warming", "Environmental Pollution & Degradation", "Conservation, Protected Areas", "National & International Conventions"],
+    "CSAT": ["Reading Comprehension", "Interpersonal & Communication Skills", "Logical Reasoning & Analytical Ability", "Decision Making & Problem Solving", "General Mental Ability", "Basic Numeracy & Data Interpretation"]
   },
   "SSC CGL": {
-    "Quantitative Aptitude": ["Number System", "Percentage", "Profit & Loss", "Time & Work", "Algebra", "Geometry", "Trigonometry", "Data Interpretation"],
-    "Reasoning": ["Analogy", "Coding-Decoding", "Syllogism", "Blood Relations", "Verbal and Non-verbal reasoning"],
-    "English": ["Reading Comprehension", "Cloze Test", "Synonyms & Antonyms", "Idioms & Phrases", "One word substitution", "Error Spotting"],
-    "General Awareness": ["History", "Geography", "Polity", "Economy", "General Science", "Static GK", "Current Affairs"]
+    "General Intelligence & Reasoning": [
+        "Analogy", "Classification", "Coding-Decoding", "Series (Number, Alphabet, Figure)", 
+        "Blood Relations", "Direction and Distance", "Syllogism", "Venn Diagrams", "Puzzles", 
+        "Seating Arrangement", "Statement and Conclusion", "Logical Reasoning", 
+        "Missing Number", "Matrix", "Paper Folding, Cutting & Unfolding", "Embedded Figures",
+        "Figure Completion", "Mirror and Water Images", "Non-Verbal Reasoning"
+    ],
+    "Quantitative Aptitude": [
+        "Number System & Simplification", "Percentage", "Profit, Loss & Discount", "Ratio and Proportion", 
+        "Average", "Simple & Compound Interest", "Time & Work, Pipes & Cisterns", "Time, Speed & Distance",
+        "Algebra", "Geometry", "Mensuration (2D & 3D)", "Trigonometry", "Data Interpretation (Charts, Graphs)"
+    ],
+    "English Language & Comprehension": [
+        "Reading Comprehension", "Cloze Test", "Synonyms & Antonyms", "Idioms & Phrases", 
+        "One-Word Substitution", "Error Spotting & Sentence Correction", "Fill in the Blanks", 
+        "Active & Passive Voice", "Direct & Indirect Speech", "Para Jumbles"
+    ],
+    "General Awareness": ["History (Ancient, Medieval, Modern)", "Geography (Indian, World)", "Polity & Constitution", "Economy", "General Science (Physics, Chemistry, Biology)", "Static GK (Art, Culture, Books, Awards)", "Current Affairs (National & International)"]
   },
   "IBPS PO": {
-    "Quantitative Aptitude": ["Simplification/Approximation", "Number Series", "Data Interpretation", "Quadratic Equations", "Arithmetic Problems"],
-    "Reasoning": ["Puzzles", "Seating Arrangement", "Syllogism", "Blood Relations", "Input-Output"],
-    "English": ["Reading Comprehension", "Cloze Test", "Para Jumbles", "Error Spotting"],
-    "General Awareness": ["Banking Awareness", "Financial Awareness", "Current Affairs", "Static GK"],
+    "Reasoning Ability": [
+        "Puzzles (Floor, Box, Day/Month based)", "Seating Arrangements (Linear, Circular, Square)",
+        "Syllogism", "Blood Relations", "Direction Sense", "Inequalities (Coded & Direct)",
+        "Input-Output", "Coding-Decoding", "Data Sufficiency", "Logical Reasoning"
+    ],
+    "Quantitative Aptitude": [
+        "Simplification & Approximation", "Number Series (Missing & Wrong)", "Data Interpretation (Bar, Line, Pie, Tabular, Caselet)",
+        "Quadratic Equations", "Quantity Comparison (Q1, Q2)", "Arithmetic Problems (Percentage, Profit/Loss, Time/Work etc.)"
+    ],
+    "English Language": [
+        "Reading Comprehension", "Cloze Test", "Para Jumbles / Sentence Rearrangement",
+        "Error Spotting / Sentence Correction", "Fillers (Single, Double)", "Word Swap / Word Usage"
+    ],
+    "General, Economy & Banking Awareness": ["Banking & Financial Awareness", "Current Affairs (Last 6 months)", "Static Awareness (GK)"]
   },
   "RRB NTPC": {
-      "Mathematics": ["Number System", "Decimals", "Fractions", "LCM, HCF", "Ratio and Proportion", "Percentage", "Mensuration", "Time and Work", "Time and Distance", "Simple and Compound Interest", "Profit and Loss", "Elementary Algebra", "Geometry and Trigonometry", "Elementary Statistics"],
-      "General Intelligence and Reasoning": ["Analogies", "Completion of Number and Alphabetical Series", "Coding and Decoding", "Mathematical Operations", "Similarities and Differences", "Relationships", "Analytical Reasoning", "Syllogism", "Jumbling", "Venn Diagrams", "Puzzle", "Data Sufficiency"],
-      "General Awareness": ["Current Events of National and International Importance", "Games and Sports", "Art and Culture of India", "Indian Literature", "Monuments and Places of India", "General Science and Life Science (up to 10th CBSE)", "History of India and Freedom Struggle", "Physical, Social and Economic Geography of India and World", "Indian Polity and Governance- constitution and political system", "General Scientific and Technological Developments including Space and Nuclear Program of India", "UNICEF and Other important World Organizations"]
+      "Mathematics": ["Number System & BODMAS", "Decimals & Fractions", "LCM, HCF", "Ratio and Proportion", "Percentage", "Mensuration", "Time and Work", "Time and Distance", "Simple and Compound Interest", "Profit and Loss", "Elementary Algebra", "Geometry and Trigonometry", "Elementary Statistics"],
+      "General Intelligence and Reasoning": ["Analogies", "Series (Number, Alphabetical)", "Coding and Decoding", "Mathematical Operations", "Relationships (Blood Relations)", "Syllogism", "Jumbling & Venn Diagrams", "Puzzle & Data Sufficiency", "Statement-Conclusion & Decision Making", "Analytical Reasoning"],
+      "General Awareness": ["Current Events (National/International)", "Games and Sports", "Art and Culture of India", "Indian Literature & Monuments", "General Science & Life Science (up to 10th CBSE)", "History of India & Freedom Struggle", "Indian & World Geography", "Indian Polity & Governance", "Scientific Developments (Space, Nuclear)", "UN & World Organizations", "Environmental Issues", "Basics of Computers"]
   }
 };
+
 
 export const DIFFICULTIES = ['Easy', 'Medium', 'Hard', 'Mixed'] as const;
 export const LANGUAGES = ['English', 'Hindi', 'Bilingual'] as const;
