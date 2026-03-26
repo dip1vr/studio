@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, Zap, BrainCircuit, Target } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
@@ -27,53 +27,53 @@ export default function Home() {
   const heroImage = PlaceHolderImages.find(p => p.id === "hero-image");
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-background">
+    <div className="flex flex-col min-h-dvh bg-background">
       <main className="flex-1">
-        <section className="w-full pt-12 md:pt-24 lg:pt-32 bg-gradient-to-b from-primary/5 to-transparent">
+        <section className="relative w-full pt-24 md:pt-32 lg:pt-40 pb-12 md:pb-24 lg:pb-32 overflow-hidden">
+          <div className="absolute top-0 left-0 -z-10 h-full w-full bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(29,78,216,0.15),rgba(255,255,255,0))]"></div>
           <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 xl:gap-24">
-              <div className="flex flex-col justify-center space-y-6">
-                <div className="space-y-4">
-                  <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary to-foreground/70">
-                    Ace Your Competitive Exams
-                  </h1>
-                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                    Vidyarthi Vista is your AI co-pilot for mastering Indian government exams. Generate endless mock tests, receive personalized feedback, and conquer your goals.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Button asChild size="lg" className="shadow-lg shadow-primary/20">
-                    <Link href="/test/new">
-                      Create Your First Test
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg">
-                    <Link href="/history">View My History</Link>
-                  </Button>
-                </div>
+            <div className="flex flex-col items-center space-y-6 text-center">
+              <div className="space-y-4">
+                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary to-foreground/80 leading-tight">
+                  Master Your Competitive Exams with AI
+                </h1>
+                <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
+                  Vidyarthi Vista is your AI co-pilot for mastering Indian government exams. Generate endless mock tests, receive personalized feedback, and conquer your goals.
+                </p>
               </div>
-              {heroImage && (
-                <div className="relative flex items-center justify-center">
-                  <Image
-                    src={heroImage.imageUrl}
-                    alt={heroImage.description}
-                    width={550}
-                    height={550}
-                    className="rounded-xl object-contain"
-                    data-ai-hint={heroImage.imageHint}
-                    priority
-                  />
+              <div className="flex flex-col gap-4 min-[400px]:flex-row">
+                <Button asChild size="lg" className="shadow-lg shadow-primary/30 transition-transform hover:scale-105">
+                  <Link href="/test/new">
+                    Create Your First Test
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost" size="lg" className="transition-transform hover:scale-105">
+                  <Link href="/history">View My History</Link>
+                </Button>
+              </div>
+            </div>
+             {heroImage && (
+                <div className="relative mt-16 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10"></div>
+                     <Image
+                        src={heroImage.imageUrl}
+                        alt={heroImage.description}
+                        width={800}
+                        height={450}
+                        className="rounded-2xl object-cover border shadow-2xl shadow-primary/10"
+                        data-ai-hint={heroImage.imageHint}
+                        priority
+                    />
                 </div>
               )}
-            </div>
           </div>
         </section>
         
-        <section id="features" className="w-full py-12 md:py-24 lg:py-32">
+        <section id="features" className="w-full py-12 md:py-24 lg:py-32 bg-secondary/30">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
-              <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm font-medium">Key Features</div>
+              <div className="inline-block rounded-lg bg-primary/10 text-primary px-3 py-1 text-sm font-medium">Key Features</div>
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">The Ultimate Prep Toolkit</h2>
               <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                 Go beyond simple practice. Our AI tools analyze your performance and guide you to success.
@@ -81,12 +81,12 @@ export default function Home() {
             </div>
             <div className="mx-auto grid max-w-5xl items-stretch gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {features.map((feature) => (
-                <Card key={feature.title} className="flex flex-col hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+                <Card key={feature.title} className="flex flex-col border-transparent shadow-md hover:shadow-xl hover:border-primary/30 hover:-translate-y-2 transition-all duration-300 bg-card/50 backdrop-blur-sm">
                   <CardHeader className="items-center text-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary/80 to-primary text-primary-foreground mb-4">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary/80 to-primary text-primary-foreground mb-4 shadow-lg shadow-primary/20">
                         {feature.icon}
                     </div>
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                    <CardTitle className="text-xl font-headline">{feature.title}</CardTitle>
                   </CardHeader>
                   <CardContent className="text-center flex-1">
                     <p className="text-muted-foreground">{feature.description}</p>
@@ -97,18 +97,19 @@ export default function Home() {
           </div>
         </section>
         
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/50">
+        <section className="w-full py-12 md:py-24 lg:py-32">
           <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
             <div className="space-y-3">
-              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">Ready to Elevate Your Preparation?</h2>
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-headline">Ready to Elevate Your Preparation?</h2>
               <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                 Stop guessing and start improving. Create a tailored mock test now and get the insights you need to succeed.
               </p>
             </div>
             <div className="mx-auto w-full max-w-sm space-y-2">
-                <Button asChild size="lg" className="w-full shadow-lg shadow-primary/20">
+                <Button asChild size="lg" className="w-full shadow-lg shadow-primary/30 transition-transform hover:scale-105">
                     <Link href="/test/new">
                       Start a Free Mock Test Now
+                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
                   </Button>
             </div>
