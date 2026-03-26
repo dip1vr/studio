@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserConfiguration": {
@@ -14,6 +15,10 @@
           "type": "string",
           "description": "The name of the AI provider currently selected by the user (e.g., 'Google Gemini', 'OpenAI ChatGPT')."
         },
+        "apiKey": {
+          "type": "string",
+          "description": "The user's API key for the selected AI provider. This is stored in Firestore."
+        },
         "preferredLanguage": {
           "type": "string",
           "description": "The user's preferred language for the application UI ('English', 'Hindi', 'Bilingual')."
@@ -29,10 +34,7 @@
       },
       "required": [
         "id",
-        "selectedAiProvider",
-        "preferredLanguage",
-        "uiMode",
-        "questionDisplayMode"
+        "selectedAiProvider"
       ]
     },
     "Exam": {

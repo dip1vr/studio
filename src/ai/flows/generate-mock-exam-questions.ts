@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A Genkit flow for generating mock exam questions based on user-defined criteria.
@@ -8,6 +9,8 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {googleAI} from '@genkit-ai/google-genai';
+import {genkit} from 'genkit';
 import {z} from 'genkit';
 
 // Input Schema
@@ -18,6 +21,7 @@ const GenerateMockExamQuestionsInputSchema = z.object({
   difficulty: z.enum(['Easy', 'Medium', 'Hard', 'Mixed']).describe('The difficulty level of the questions.'),
   numberOfQuestions: z.number().int().min(1).max(100).describe('The number of questions to generate.'),
   language: z.enum(['English', 'Hindi', 'Bilingual']).describe('The language for the questions and options.'),
+  apiKey: z.string().optional().describe('Optional API key to use for this request.'),
 });
 export type GenerateMockExamQuestionsInput = z.infer<typeof GenerateMockExamQuestionsInputSchema>;
 
@@ -32,13 +36,8 @@ const QuestionOutputSchema = z.object({
 const GenerateMockExamQuestionsOutputSchema = z.array(QuestionOutputSchema).describe('An array of generated multiple-choice questions.');
 export type GenerateMockExamQuestionsOutput = z.infer<typeof GenerateMockExamQuestionsOutputSchema>;
 
-// Prompt definition
-const generateMockExamQuestionsPrompt = ai.definePrompt({
-  name: 'generateMockExamQuestionsPrompt',
-  input: {schema: GenerateMockExamQuestionsInputSchema},
-  output: {schema: GenerateMockExamQuestionsOutputSchema},
-  prompt: `You are an expert at creating multiple-choice questions for Indian Government Exams.\nYour task is to generate {{numberOfQuestions}} unique multiple-choice questions (MCQs) in {{language}} for the "{{exam}}" exam.\n\n{{#if subject}}\nFocus on the subject: "{{subject}}".\n{{/if}}\n\n{{#if topic}}\nSpecifically, cover the topic: "{{topic}}".\n{{/if}}\n\nThe difficulty level should be "{{difficulty}}".\n\nEach question must have:\n- A 'questionText' field with the question itself.\n- An 'options' field which is an array of exactly four distinct answer choices (A, B, C, D).\n- A 'correctAnswerIndex' field, which is the 0-indexed number (0, 1, 2, or 3) corresponding to the correct answer in the 'options' array.\n- An 'explanation' field providing a detailed reason for the correct answer.\n\nEnsure the questions are relevant to the specified exam, subject, and topic.\nAvoid ambiguity in questions and options.\nGenerate the output as a JSON array of question objects, strictly following the schema.\n`,
-});
+// Prompt template string
+const promptTemplate = `You are an expert at creating multiple-choice questions for Indian Government Exams.\nYour task is to generate {{numberOfQuestions}} unique multiple-choice questions (MCQs) in {{language}} for the "{{exam}}" exam.\n\n{{#if subject}}\nFocus on the subject: "{{subject}}".\n{{/if}}\n\n{{#if topic}}\nSpecifically, cover the topic: "{{topic}}".\n{{/if}}\n\nThe difficulty level should be "{{difficulty}}".\n\nEach question must have:\n- A 'questionText' field with the question itself.\n- An 'options' field which is an array of exactly four distinct answer choices (A, B, C, D).\n- A 'correctAnswerIndex' field, which is the 0-indexed number (0, 1, 2, or 3) corresponding to the correct answer in the 'options' array.\n- An 'explanation' field providing a detailed reason for the correct answer.\n\nEnsure the questions are relevant to the specified exam, subject, and topic.\nAvoid ambiguity in questions and options.\nGenerate the output as a JSON array of question objects, strictly following the schema.\n`;
 
 // Flow definition
 const generateMockExamQuestionsFlow = ai.defineFlow(
@@ -48,7 +47,26 @@ const generateMockExamQuestionsFlow = ai.defineFlow(
     outputSchema: GenerateMockExamQuestionsOutputSchema,
   },
   async (input) => {
-    const {output} = await generateMockExamQuestionsPrompt(input);
+    if (!input.apiKey) {
+        throw new Error('API key is required.');
+    }
+    
+    // Dynamically create a Genkit instance with the user's API key
+    const userAi = genkit({
+        plugins: [googleAI({ apiKey: input.apiKey })],
+        model: 'googleai/gemini-2.5-flash',
+    });
+
+    // Dynamically define the prompt with the temporary AI instance
+    const userPrompt = userAi.definePrompt({
+        name: 'generateMockExamQuestionsPrompt_dynamic',
+        input: {schema: GenerateMockExamQuestionsInputSchema},
+        output: {schema: GenerateMockExamQuestionsOutputSchema},
+        prompt: promptTemplate,
+    });
+
+    const {output} = await userPrompt(input);
+    
     if (!output) {
       throw new Error('Failed to generate questions.');
     }

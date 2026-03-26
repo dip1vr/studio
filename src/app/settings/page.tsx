@@ -12,11 +12,11 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import type { AIProvider } from "@/lib/types";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, AlertTriangle } from "lucide-react";
+import type { AIProvider, UserConfiguration } from "@/lib/types";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from 'firebase/firestore';
+import { saveUserConfiguration } from "@/lib/user-actions";
 
-// Schema for all settings, including the optional API key for client-side storage
 const settingsSchema = z.object({
   activeProvider: z.enum(["gemini", "claude", "openai", "deepseek"]),
   apiKey: z.string().optional(),
@@ -24,76 +24,62 @@ const settingsSchema = z.object({
 
 const PROVIDERS: { id: AIProvider, name: string }[] = [
     { id: "gemini", name: "Google Gemini" },
-    { id: "claude", name: "Anthropic Claude" },
-    { id: "openai", name: "OpenAI ChatGPT" },
-    { id: "deepseek", name: "DeepSeek" },
+    { id: "claude", name: "Anthropic Claude", disabled: true },
+    { id: "openai", name: "OpenAI ChatGPT", disabled: true },
+    { id: "deepseek", name: "DeepSeek", disabled: true },
 ];
 
 export default function SettingsPage() {
-  const [isMounted, setIsMounted] = useState(false);
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userConfigRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid, 'userConfigurations', user.uid);
+  }, [user, firestore]);
+
+  const { data: userConfig, isLoading } = useDoc<UserConfiguration>(userConfigRef);
 
   const form = useForm<z.infer<typeof settingsSchema>>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
       activeProvider: 'gemini',
-      apiKey: "", // Default to empty string to ensure input is always controlled
+      apiKey: "",
     },
   });
 
   useEffect(() => {
-    // Load all settings from localStorage
-    const savedSettings = localStorage.getItem("ai_settings");
-    if (savedSettings) {
-      const parsedSettings = JSON.parse(savedSettings);
-      // Ensure apiKey is always a string to prevent uncontrolled to controlled switch
+    if (userConfig) {
       form.reset({
-        ...parsedSettings,
-        apiKey: parsedSettings.apiKey || "", 
+        activeProvider: userConfig.activeProvider || 'gemini',
+        apiKey: userConfig.apiKey || "",
       });
     }
-    setIsMounted(true);
-  }, [form]);
-  
-  if (!isMounted) {
-    return <div className="container mx-auto max-w-2xl py-12">Loading settings...</div>;
-  }
+  }, [userConfig, form]);
 
   function onSubmit(values: z.infer<typeof settingsSchema>) {
-    // Save all settings to localStorage
-    localStorage.setItem("ai_settings", JSON.stringify(values));
+    if (!firestore || !user) {
+      toast({ title: "Error", description: "Could not save settings. User not found.", variant: "destructive" });
+      return;
+    }
+    saveUserConfiguration(firestore, user.uid, values);
     toast({
       title: "Settings Saved",
-      description: "Your AI preferences have been saved in your browser.",
+      description: "Your AI preferences have been saved to your profile.",
     });
+  }
+
+  if (isLoading) {
+    return <div className="container mx-auto max-w-2xl py-12">Loading settings...</div>;
   }
 
   return (
     <div className="container mx-auto max-w-2xl py-12 space-y-8">
-      <Alert variant="destructive" className="p-6">
-        <AlertTriangle className="h-6 w-6" />
-        <AlertTitle className="text-xl font-bold">IMPORTANT: How to Fix the API Key Error</AlertTitle>
-        <AlertDescription className="text-base mt-2">
-          The API key you enter below is saved <strong>only in your browser</strong>.
-          <br />
-          The AI that generates tests runs on the server and <strong>CANNOT</strong> access it.
-          <div className="my-4 font-bold text-lg">
-            To make the AI work, you MUST create a <strong>.env</strong> file.
-          </div>
-          1. In the file explorer on the left, create a new file named <code className="bg-muted px-2 py-1 rounded">.env</code> in the main project folder.
-          <br />
-          2. Add this exact line to the file:
-          <pre className="mt-2 rounded-md bg-primary/10 p-4 text-base font-mono text-destructive-foreground">
-            GEMINI_API_KEY=YOUR_API_KEY_HERE
-          </pre>
-          <p className="mt-2">Replace <strong>YOUR_API_KEY_HERE</strong> with your real Gemini API key.</p>
-        </AlertDescription>
-      </Alert>
-
       <Card>
         <CardHeader>
           <CardTitle className="font-headline">AI Settings</CardTitle>
           <CardDescription>
-            Manage your AI provider and other preferences.
+            Manage your AI provider. Your settings are saved to your user profile.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,12 +90,12 @@ export default function SettingsPage() {
                 name="apiKey"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Gemini API Key (Browser Storage)</FormLabel>
+                    <FormLabel>Gemini API Key</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Enter API key for browser storage" {...field} />
+                      <Input type="password" placeholder="Enter your Google Gemini API key" {...field} />
                     </FormControl>
-                    <FormDescription className="text-destructive font-bold">
-                     WARNING: This key is NOT used for test generation. You must use the .env file as explained above.
+                    <FormDescription>
+                     Your API key is stored in your user profile in the database and used for generating tests.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -131,11 +117,11 @@ export default function SettingsPage() {
                         {PROVIDERS.map(provider => (
                           <FormItem key={provider.id}>
                             <FormControl>
-                                <RadioGroupItem value={provider.id} id={provider.id} className="peer sr-only" />
+                                <RadioGroupItem value={provider.id} id={provider.id} className="peer sr-only" disabled={provider.disabled} />
                             </FormControl>
                             <Label
                               htmlFor={provider.id}
-                              className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                              className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${provider.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                             >
                               {provider.name}
                             </Label>
@@ -144,14 +130,14 @@ export default function SettingsPage() {
                       </RadioGroup>
                     </FormControl>
                      <FormDescription>
-                        Currently, only Google Gemini is supported for backend operations.
+                        Currently, only Google Gemini is fully supported.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              <Button type="submit">Save Key in Browser</Button>
+              <Button type="submit">Save Settings</Button>
             </form>
           </Form>
         </CardContent>

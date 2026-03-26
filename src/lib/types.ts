@@ -20,6 +20,11 @@ export type ExamConfig = {
   negativeMarkingRatio?: number;
 };
 
+export type UserConfiguration = {
+  activeProvider: AIProvider;
+  apiKey?: string;
+};
+
 export type Question = Awaited<ReturnType<typeof generateMockExamQuestions>>[0];
 
 export type UserAnswer = {

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,10 +28,12 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
-import { DIFFICULTIES, EXAMS, LANGUAGES, SUBJECTS, TOPICS, NUM_QUESTIONS } from "@/lib/constants";
+import { DIFFICULTIES, EXAMS, LANGUAGES, SUBJECTS, TOPICS } from "@/lib/constants";
 import { generateMockExamQuestions } from "@/ai/flows/generate-mock-exam-questions";
 import { Loader2 } from "lucide-react";
-import type { TestSession } from "@/lib/types";
+import type { TestSession, UserConfiguration } from "@/lib/types";
+import { useDoc, useUser, useFirestore, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 const formSchema = z.object({
   exam: z.string({ required_error: "Please select an exam." }),
@@ -53,6 +56,16 @@ export function TestSetupForm() {
   const [isPending, startTransition] = useTransition();
   const [subjects, setSubjects] = useState<string[]>([]);
   const [topics, setTopics] = useState<string[]>([]);
+  
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userConfigRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid, 'userConfigurations', user.uid);
+  }, [user, firestore]);
+
+  const { data: userConfig } = useDoc<UserConfiguration>(userConfigRef);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -101,6 +114,16 @@ export function TestSetupForm() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
+      if (!userConfig?.apiKey) {
+        toast({
+          title: "API Key Missing",
+          description: "Please set your Gemini API key in the Settings page before generating a test.",
+          variant: "destructive",
+        });
+        router.push('/settings');
+        return;
+      }
+
       try {
         const questions = await generateMockExamQuestions({
           exam: values.exam,
@@ -109,6 +132,7 @@ export function TestSetupForm() {
           numberOfQuestions: values.numberOfQuestions,
           difficulty: values.difficulty,
           language: values.language,
+          apiKey: userConfig.apiKey,
         });
 
         if (!questions || questions.length === 0) {
@@ -141,7 +165,7 @@ export function TestSetupForm() {
         console.error("Failed to generate test:", error);
         toast({
           title: "An Unexpected Error Occurred",
-          description: "Could not start the test. Please check your connection or AI provider settings and try again.",
+          description: "Could not start the test. Please check your API key in settings and try again.",
           variant: "destructive",
         });
       }
@@ -174,11 +198,11 @@ export function TestSetupForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Subject (Optional)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || 'all'} disabled={subjects.length === 0}>
+                  <Select onValueChange={field.onChange} value={field.value ?? 'all'} disabled={subjects.length === 0}>
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="Select a subject" /></SelectTrigger>
                     </FormControl>
-                    <SelectContent><SelectItem value="all" >All Subjects</SelectItem>{subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    <SelectContent><SelectItem value="all">All Subjects</SelectItem>{subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
@@ -190,7 +214,7 @@ export function TestSetupForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Topic (Optional)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || 'all'} disabled={topics.length === 0}>
+                  <Select onValueChange={field.onChange} value={field.value ?? 'all'} disabled={topics.length === 0}>
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="Select a topic" /></SelectTrigger>
                     </FormControl>
@@ -257,7 +281,7 @@ export function TestSetupForm() {
                 <FormItem>
                   <FormLabel>Time Limit (minutes, optional)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g., 60" {...field} value={field.value ?? ''} onChange={event => field.onChange(event.target.value === '' ? undefined : +event.target.value)} />
+                    <Input type="number" placeholder="e.g., 60" {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -286,7 +310,7 @@ export function TestSetupForm() {
                     <FormItem>
                       <FormLabel>Negative Marking Ratio</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" placeholder="e.g., 0.25 for 1/4th" {...field} value={field.value ?? ''} onChange={event => field.onChange(event.target.value === '' ? undefined : +event.target.value)} />
+                        <Input type="number" step="0.01" placeholder="e.g., 0.25 for 1/4th" {...field} value={field.value ?? ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
