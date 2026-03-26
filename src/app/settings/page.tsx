@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -99,7 +98,7 @@ export default function SettingsPage() {
                   <FormItem>
                     <FormLabel>Gemini API Key (Browser Storage)</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Enter API key for browser storage" {...field} value={field.value ?? ''} />
+                      <Input type="password" placeholder="Enter API key for browser storage" {...field} />
                     </FormControl>
                     <FormDescription>
                      This key is stored only in your browser. It is NOT used for server-side test generation.
