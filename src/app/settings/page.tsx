@@ -45,7 +45,11 @@ export default function SettingsPage() {
     const savedSettings = localStorage.getItem("ai_settings");
     if (savedSettings) {
       const parsedSettings = JSON.parse(savedSettings);
-      form.reset(parsedSettings);
+      // Ensure apiKey is always a string to prevent uncontrolled to controlled switch
+      form.reset({
+        ...parsedSettings,
+        apiKey: parsedSettings.apiKey || "", 
+      });
     }
     setIsMounted(true);
   }, [form]);
@@ -95,7 +99,7 @@ export default function SettingsPage() {
                   <FormItem>
                     <FormLabel>Gemini API Key (Browser Storage)</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Enter API key for browser storage" {...field} />
+                      <Input type="password" placeholder="Enter API key for browser storage" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormDescription>
                      This key is stored only in your browser. It is NOT used for server-side test generation.
