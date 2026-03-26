@@ -1,14 +1,16 @@
 
 "use client";
 import { useState, useEffect } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
+import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { CheckCircle, XCircle, AlertCircle, Clock, BarChart2, Lightbulb } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import type { TestResult, TestSession } from '@/lib/types';
 import { offerPersonalizedStudySuggestions } from '@/ai/flows/offer-personalized-study-suggestions';
@@ -20,55 +22,88 @@ const COLORS = {
 };
 
 export default function ResultPage({ params }: { params: { resultId: string } }) {
-  const [result, setResult] = useState<TestResult | null>(null);
-  const [session, setSession] = useState<TestSession | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const router = useRouter();
 
+  const resultRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid, 'testResults', params.resultId);
+  }, [user, firestore, params.resultId]);
+  const { data: result, isLoading: resultIsLoading } = useDoc<TestResult>(resultRef);
+
+  const sessionRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid, 'userTests', params.resultId);
+  }, [user, firestore, params.resultId]);
+  const { data: session, isLoading: sessionIsLoading } = useDoc<TestSession>(sessionRef);
+  
   useEffect(() => {
-    const resultData = localStorage.getItem(`test_result_${params.resultId}`);
-    const sessionData = localStorage.getItem(`test_session_${params.resultId}`);
-    if (resultData) {
-      const parsedResult: TestResult = JSON.parse(resultData);
-      setResult(parsedResult);
-      if(sessionData) {
-        const parsedSession: TestSession = JSON.parse(sessionData);
-        setSession(parsedSession);
-      }
-      
-      if (parsedResult.performanceBreakdown && parsedResult.performanceBreakdown.length > 0) {
-        const suggestionPayload = {
-          totalQuestions: parsedResult.totalQuestions,
-          correctAnswers: parsedResult.correctAnswers,
-          incorrectAnswers: parsedResult.incorrectAnswers,
-          skippedQuestions: parsedResult.skipped,
-          overallAccuracy: parsedResult.accuracy,
-          performanceBreakdown: parsedResult.performanceBreakdown.map(p => ({
-            categoryType: parsedResult.config.topic ? 'topic' as const : 'subject' as const,
-            categoryName: p.category,
-            correctCount: p.correctCount,
-            incorrectCount: p.incorrectCount,
-            accuracy: p.accuracy,
-          }))
-        };
-        
-        offerPersonalizedStudySuggestions(suggestionPayload).then(res => {
+    if (!result || !result.performanceBreakdown || result.performanceBreakdown.length === 0) {
+        setSuggestions([]);
+        return;
+    };
+    const getSuggestions = async () => {
+        try {
+            const suggestionPayload = {
+              totalQuestions: result.totalQuestions,
+              correctAnswers: result.correctAnswers,
+              incorrectAnswers: result.incorrectAnswers,
+              skippedQuestions: result.skipped,
+              overallAccuracy: result.accuracy,
+              performanceBreakdown: result.performanceBreakdown.map(p => ({
+                categoryType: result.config.topic ? 'topic' as const : 'subject' as const,
+                categoryName: p.category,
+                correctCount: p.correctCount,
+                incorrectCount: p.incorrectCount,
+                accuracy: p.accuracy,
+              }))
+            };
+            
+            const res = await offerPersonalizedStudySuggestions(suggestionPayload);
             setSuggestions(res.tips);
-        }).catch(err => {
+        } catch (err) {
             console.error("Failed to get AI suggestions:", err);
             // Fail silently, don't show an error to the user.
-        });
-      }
-    }
-    setIsMounted(true);
-  }, [params.resultId]);
+        }
+    };
+    getSuggestions();
+  }, [result]);
 
-  if (!isMounted) {
-    return <div className="container mx-auto py-12 text-center">Loading results...</div>;
+  const isLoading = isUserLoading || resultIsLoading || sessionIsLoading;
+
+  useEffect(() => {
+      if (!isLoading && (!result || !session)) {
+          // if done loading and still no data, maybe it was an old localstorage link
+          toast({ title: 'Report not found', description: 'This test result could not be found in your account.', variant: 'destructive'});
+          router.replace('/history');
+      }
+  }, [isLoading, result, session, router]);
+
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-8 space-y-8">
+        <Skeleton className="h-24 w-full" />
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+        </div>
+        <div className="grid md:grid-cols-2 gap-8">
+            <Skeleton className="h-80 w-full" />
+            <Skeleton className="h-80 w-full" />
+        </div>
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
   }
 
   if (!result || !session) {
-    notFound();
+    // Return null while redirecting
+    return null;
   }
 
   const pieData = [

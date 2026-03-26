@@ -34,6 +34,7 @@ export type UserAnswer = {
 
 export type TestSession = {
   id: string;
+  userId: string;
   config: ExamConfig;
   questions: Question[];
   userAnswers: UserAnswer[];
@@ -52,6 +53,7 @@ export type PerformanceBreakdown = {
 
 export type TestResult = {
   id: string;
+  userId: string;
   config: ExamConfig;
   score: number;
   accuracy: number;

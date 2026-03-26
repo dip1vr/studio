@@ -1,10 +1,10 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
-import type { TestSession, UserAnswer, Question } from '@/lib/types';
+import type { TestSession, UserAnswer, Question, TestResult } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -14,6 +14,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import { ChevronLeft, ChevronRight, Bookmark, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUser, useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+
 
 const getStatusColor = (status: UserAnswer['status']) => {
   switch (status) {
@@ -31,6 +35,8 @@ export function TestInterface({ testId }: { testId: string }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const { user } = useUser();
+  const firestore = useFirestore();
 
   useEffect(() => {
     const sessionData = localStorage.getItem(`test_session_${testId}`);
@@ -59,7 +65,12 @@ export function TestInterface({ testId }: { testId: string }) {
 }, [currentQuestionIndex, testId]);
   
   const submitTest = useCallback(() => {
-    if (!session) return;
+    if (!session || !user || !firestore) {
+        if (!user) {
+            toast({ title: 'Not Signed In', description: 'Please sign in to save your results.', variant: 'destructive'});
+        }
+        return;
+    };
     
     const endTime = Date.now();
     let correctAnswers = 0;
@@ -102,8 +113,9 @@ export function TestInterface({ testId }: { testId: string }) {
         });
     }
 
-    const result: import('@/lib/types').TestResult = {
+    const result: TestResult = {
         id: session.id,
+        userId: user.uid,
         config: session.config,
         score,
         accuracy,
@@ -116,11 +128,20 @@ export function TestInterface({ testId }: { testId: string }) {
         performanceBreakdown,
     };
     
-    localStorage.setItem(`test_result_${session.id}`, JSON.stringify(result));
-    toast({ title: 'Test Submitted! 🎉', description: 'Your results have been calculated.' });
+    const finalSession: TestSession = { ...session, userId: user.uid, endTime: endTime };
+
+    const resultRef = doc(firestore, 'users', user.uid, 'testResults', session.id);
+    setDocumentNonBlocking(resultRef, result, { merge: false });
+
+    const sessionRef = doc(firestore, 'users', user.uid, 'userTests', session.id);
+    setDocumentNonBlocking(sessionRef, finalSession, { merge: false });
+    
+    localStorage.removeItem(`test_session_${session.id}`);
+
+    toast({ title: 'Test Submitted! 🎉', description: 'Your results have been saved to your profile.' });
     router.replace(`/results/${session.id}`);
 
-  }, [session, router]);
+  }, [session, router, user, firestore]);
 
 
   useEffect(() => {
