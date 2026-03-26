@@ -2,9 +2,9 @@
   "placeholderImages": [
     {
       "id": "hero-image",
-      "description": "Students studying for exams in a library setting, focused and determined.",
-      "imageUrl": "https://picsum.photos/seed/vidyarthi-hero/1200/600",
-      "imageHint": "students library"
+      "description": "An abstract, modern graphic representing learning and AI, with blue and purple tones.",
+      "imageUrl": "https://picsum.photos/seed/vidyarthi-hero-new/600/600",
+      "imageHint": "AI learning"
     }
   ]
 }
