@@ -1,7 +1,6 @@
 
 "use client";
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts';
@@ -11,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { CheckCircle, XCircle, AlertCircle, Clock, BarChart2, Lightbulb } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/hooks/use-toast';
 
 import type { TestResult, TestSession } from '@/lib/types';
 import { offerPersonalizedStudySuggestions } from '@/ai/flows/offer-personalized-study-suggestions';
@@ -26,7 +24,6 @@ export function ResultPageClient({ resultId }: { resultId: string }) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const router = useRouter();
 
   const resultRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -74,15 +71,6 @@ export function ResultPageClient({ resultId }: { resultId: string }) {
 
   const isLoading = isUserLoading || resultIsLoading || sessionIsLoading;
 
-  useEffect(() => {
-      if (!isLoading && (!result || !session)) {
-          // if done loading and still no data, maybe it was an old localstorage link
-          toast({ title: 'Report not found', description: 'This test result could not be found in your account.', variant: 'destructive'});
-          router.replace('/history');
-      }
-  }, [isLoading, result, session, router]);
-
-
   if (isLoading) {
     return (
       <div className="container mx-auto py-8 space-y-8">
@@ -103,8 +91,24 @@ export function ResultPageClient({ resultId }: { resultId: string }) {
   }
 
   if (!result || !session) {
-    // Return null while redirecting
-    return null;
+    return (
+      <div className="container mx-auto py-12 text-center">
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle>Report Not Found</CardTitle>
+            <CardDescription>
+                We couldn't find this test report. It might still be processing, or the link may be invalid.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+             <p className="text-sm text-muted-foreground">If you just finished a test, please wait a moment and try refreshing the page.</p>
+            <Button asChild>
+              <Link href="/history">View All Test History</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const pieData = [
