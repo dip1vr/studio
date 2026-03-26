@@ -10,16 +10,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Bookmark, Circle, CheckCircle, LayoutGrid, XCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bookmark, Circle, CheckCircle, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-const PaletteContent = ({
+
+const Palette = ({
   session,
   currentQuestionIndex,
   onQuestionSelect,
@@ -28,48 +28,49 @@ const PaletteContent = ({
   currentQuestionIndex: number;
   onQuestionSelect: (index: number) => void;
 }) => {
-  return (
-    <>
-      <ScrollArea className="flex-1">
-        <div className="grid grid-cols-5 gap-2 pr-2">
-          {session.questions.map((_, index) => {
-            const status = session.userAnswers[index].status;
-            let statusClass = '';
-            switch (status) {
-              case 'answered': statusClass = 'bg-green-500/20 border-green-500 text-green-700 dark:text-green-400'; break;
-              case 'not-answered': statusClass = 'bg-red-500/20 border-red-500 text-red-700 dark:text-red-400'; break;
-              case 'marked-for-review': statusClass = 'bg-purple-500/20 border-purple-500 text-purple-700 dark:text-purple-400'; break;
-              case 'answered-and-marked-for-review': statusClass = 'bg-yellow-500/20 border-yellow-500 text-yellow-700 dark:text-yellow-400'; break;
-              default: statusClass = 'bg-muted hover:bg-muted/80 border';
-            }
-            return (
-              <Button
-                key={index}
-                variant="outline"
-                size="icon"
-                onClick={() => onQuestionSelect(index)}
-                className={cn(
-                  'h-12 w-12 text-lg font-semibold transition-all',
-                  statusClass,
-                  index === currentQuestionIndex ? 'ring-2 ring-primary ring-offset-2 scale-110' : ''
-                )}
-              >
-                {index + 1}
-              </Button>
-            );
-          })}
+    return (
+        <div className='w-full'>
+            <ScrollArea className="w-full whitespace-nowrap rounded-md border">
+                <div className="flex w-max space-x-2 p-4">
+                    {session.questions.map((_, index) => {
+                        const status = session.userAnswers[index].status;
+                        let statusClass = '';
+                        switch (status) {
+                        case 'answered': statusClass = 'bg-green-500/20 border-green-500 text-green-700 dark:text-green-400'; break;
+                        case 'not-answered': statusClass = 'bg-red-500/20 border-red-500 text-red-700 dark:text-red-400'; break;
+                        case 'marked-for-review': statusClass = 'bg-purple-500/20 border-purple-500 text-purple-700 dark:text-purple-400'; break;
+                        case 'answered-and-marked-for-review': statusClass = 'bg-yellow-500/20 border-yellow-500 text-yellow-700 dark:text-yellow-400'; break;
+                        default: statusClass = 'bg-muted hover:bg-muted/80 border';
+                        }
+                        return (
+                        <Button
+                            key={index}
+                            variant="outline"
+                            size="icon"
+                            onClick={() => onQuestionSelect(index)}
+                            className={cn(
+                            'h-12 w-12 text-lg font-semibold transition-all flex-shrink-0',
+                            statusClass,
+                            index === currentQuestionIndex ? 'ring-2 ring-primary ring-offset-2 scale-110' : ''
+                            )}
+                        >
+                            {index + 1}
+                        </Button>
+                        );
+                    })}
+                </div>
+                <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+             <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Answered</div>
+                <div className="flex items-center gap-2"><XCircle className="h-4 w-4 text-red-500" /> Not Answered</div>
+                <div className="flex items-center gap-2"><Bookmark className="h-4 w-4 text-purple-500" /> Marked</div>
+                <div className="flex items-center gap-2"><Bookmark className="h-4 w-4 text-yellow-500 fill-current" /> Answered & Marked</div>
+                <div className="flex items-center gap-2"><Circle className="h-4 w-4 text-muted-foreground" /> Not Visited</div>
+            </div>
         </div>
-      </ScrollArea>
-      <div className="mt-4 space-y-2 text-sm text-muted-foreground">
-        <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Answered</div>
-        <div className="flex items-center gap-2"><XCircle className="h-4 w-4 text-red-500" /> Not Answered</div>
-        <div className="flex items-center gap-2"><Bookmark className="h-4 w-4 text-purple-500" /> Marked for Review</div>
-        <div className="flex items-center gap-2"><Bookmark className="h-4 w-4 text-yellow-500 fill-current" /> Answered & Marked</div>
-        <div className="flex items-center gap-2"><Circle className="h-4 w-4 text-muted-foreground" /> Not Visited</div>
-      </div>
-    </>
-  );
-};
+    )
+}
 
 
 export function TestInterface({ testId }: { testId: string }) {
@@ -78,7 +79,6 @@ export function TestInterface({ testId }: { testId: string }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -246,7 +246,6 @@ export function TestInterface({ testId }: { testId: string }) {
   
   const handleQuestionSelect = (index: number) => {
     setCurrentQuestionIndex(index);
-    setIsPaletteOpen(false); // Close sheet on selection
   };
 
   const currentQuestion: Question | undefined = session?.questions[currentQuestionIndex];
@@ -265,10 +264,9 @@ export function TestInterface({ testId }: { testId: string }) {
   };
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] bg-secondary/30">
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto p-4 md:p-8 h-full">
-            <Card className="h-full flex flex-col shadow-lg">
+    <div className="bg-secondary/30 min-h-[calc(100vh-3.5rem)]">
+      <main className="max-w-6xl mx-auto p-4 md:p-8">
+            <Card className="shadow-lg">
               <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className='flex-1'>
                     <p className='text-sm text-muted-foreground'>Question {currentQuestionIndex + 1} of {session.questions.length}</p>
@@ -276,41 +274,10 @@ export function TestInterface({ testId }: { testId: string }) {
                       {session.config.exam}
                     </CardTitle>
                   </div>
-
-                <div className='flex items-center gap-4'>
-                    {timeLeft !== null && <div className="text-lg font-mono font-semibold tabular-nums text-right shrink-0"><span className="text-muted-foreground text-sm block">Time Left</span> {formatTime(timeLeft)}</div>}
-                    <Sheet open={isPaletteOpen} onOpenChange={setIsPaletteOpen}>
-                        <SheetTrigger asChild>
-                            <Button variant="outline" size="icon" className="md:hidden">
-                                <LayoutGrid className="h-5 w-5" />
-                                <span className="sr-only">Open Question Palette</span>
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="right" className="w-[300px] p-4 flex flex-col">
-                           <SheetHeader className="mb-4 text-center">
-                               <SheetTitle>Question Palette</SheetTitle>
-                           </SheetHeader>
-                           <PaletteContent session={session} currentQuestionIndex={currentQuestionIndex} onQuestionSelect={handleQuestionSelect}/>
-                           <AlertDialog>
-                              <AlertDialogTrigger asChild><Button className="w-full mt-4" variant="destructive">End Test</Button></AlertDialogTrigger>
-                              <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                      <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                          This will end the test and calculate your score. You cannot go back after submitting.
-                                      </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={submitTest}>Submit Test</AlertDialogAction>
-                                  </AlertDialogFooter>
-                              </AlertDialogContent>
-                          </AlertDialog>
-                        </SheetContent>
-                    </Sheet>
-                </div>
+                {timeLeft !== null && <div className="text-lg font-mono font-semibold tabular-nums text-right shrink-0"><span className="text-muted-foreground text-sm block">Time Left</span> {formatTime(timeLeft)}</div>}
               </CardHeader>
-              <CardContent className="flex-1 space-y-6 pt-0 md:pt-2">
+
+              <CardContent className="space-y-6">
                 <p className="text-base md:text-lg font-semibold leading-relaxed">{currentQuestion.questionText}</p>
                 <RadioGroup key={currentQuestionIndex} value={currentUserAnswer?.selectedOption?.toString()} onValueChange={handleOptionChange} className="space-y-3">
                     {currentQuestion.options.map((option, index) => (
@@ -325,60 +292,45 @@ export function TestInterface({ testId }: { testId: string }) {
                     ))}
                 </RadioGroup>
               </CardContent>
-              <CardFooter className="flex flex-col items-center gap-4 border-t pt-4">
-                <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 w-full pt-2">
-                    <div className='flex gap-2 flex-wrap'>
-                      <Button variant="outline" onClick={handleMarkForReview}><Bookmark className="mr-2 h-4 w-4"/>Mark for Review</Button>
-                      <Button variant="ghost" onClick={clearResponse}>Clear Response</Button>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="secondary" onClick={() => setCurrentQuestionIndex(p => Math.max(0, p - 1))} disabled={currentQuestionIndex === 0}><ChevronLeft className="mr-2 h-4 w-4"/>Previous</Button>
-                      {currentQuestionIndex < session.questions.length - 1 ? (
-                        <Button onClick={() => setCurrentQuestionIndex(p => Math.min(session.questions.length - 1, p + 1))}>Save & Next <ChevronRight className="ml-2 h-4 w-4"/></Button>
-                      ) : (
-                         <AlertDialog>
-                            <AlertDialogTrigger asChild><Button variant="default">Review & Submit</Button></AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Ready to finish?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This will end the test and calculate your score. You cannot go back after submitting.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={submitTest}>Submit</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </div>
+              
+              <div className="px-6 py-4 border-y">
+                <Palette 
+                    session={session} 
+                    currentQuestionIndex={currentQuestionIndex}
+                    onQuestionSelect={handleQuestionSelect}
+                />
+              </div>
+
+              <CardFooter className="flex flex-wrap items-center justify-between gap-4 pt-6">
+                <div className='flex gap-2 flex-wrap'>
+                  <Button variant="outline" onClick={handleMarkForReview}><Bookmark className="mr-2 h-4 w-4"/>Mark for Review</Button>
+                  <Button variant="ghost" onClick={clearResponse}>Clear Response</Button>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="secondary" onClick={() => setCurrentQuestionIndex(p => Math.max(0, p - 1))} disabled={currentQuestionIndex === 0}><ChevronLeft className="mr-2 h-4 w-4"/>Previous</Button>
+                  {currentQuestionIndex < session.questions.length - 1 ? (
+                    <Button onClick={() => setCurrentQuestionIndex(p => Math.min(session.questions.length - 1, p + 1))}>Save & Next <ChevronRight className="ml-2 h-4 w-4"/></Button>
+                  ) : (
+                     <AlertDialog>
+                        <AlertDialogTrigger asChild><Button variant="default">Review & Submit</Button></AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Ready to finish?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This will end the test and calculate your score. You cannot go back after submitting.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={submitTest}>Submit</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </div>
               </CardFooter>
             </Card>
-        </div>
       </main>
-      <aside className="hidden md:flex w-80 border-l p-4 bg-card flex-col">
-        <h3 className="text-lg font-semibold mb-4 text-center">Question Palette</h3>
-        <PaletteContent session={session} currentQuestionIndex={currentQuestionIndex} onQuestionSelect={handleQuestionSelect}/>
-        <AlertDialog>
-          <AlertDialogTrigger asChild><Button className="w-full mt-4" variant="destructive">End Test</Button></AlertDialogTrigger>
-          <AlertDialogContent>
-              <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                      This will end the test and calculate your score. You cannot go back after submitting.
-                  </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={submitTest}>Submit Test</AlertDialogAction>
-              </AlertDialogFooter>
-          </AlertDialogContent>
-      </AlertDialog>
-      </aside>
     </div>
   );
 }
-
-    
