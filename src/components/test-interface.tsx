@@ -12,15 +12,16 @@ import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Bookmark, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bookmark, ClipboardList } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const getStatusColor = (status: UserAnswer['status']) => {
   switch (status) {
-    case 'answered': return 'bg-green-500 hover:bg-green-600';
-    case 'not-answered': return 'bg-red-500 hover:bg-red-600';
-    case 'marked-for-review': return 'bg-purple-500 hover:bg-purple-600';
-    case 'answered-and-marked-for-review': return 'bg-yellow-500 hover:bg-yellow-600';
-    default: return 'bg-muted hover:bg-muted/80';
+    case 'answered': return 'bg-green-500 text-white hover:bg-green-600';
+    case 'not-answered': return 'bg-blue-500 text-white hover:bg-blue-600';
+    case 'marked-for-review': return 'bg-purple-500 text-white hover:bg-purple-600';
+    case 'answered-and-marked-for-review': return 'bg-yellow-500 text-yellow-900 hover:bg-yellow-600';
+    default: return 'bg-muted hover:bg-muted/80 border'; // not-visited
   }
 };
 
@@ -43,6 +44,19 @@ export function TestInterface({ testId }: { testId: string }) {
     }
     setIsMounted(true);
   }, [testId]);
+
+  useEffect(() => {
+    setSession(prevSession => {
+        if (!prevSession || prevSession.userAnswers[currentQuestionIndex].status !== 'not-visited') {
+            return prevSession;
+        }
+        const newAnswers = [...prevSession.userAnswers];
+        newAnswers[currentQuestionIndex].status = 'not-answered';
+        const newSession = { ...prevSession, userAnswers: newAnswers };
+        localStorage.setItem(`test_session_${testId}`, JSON.stringify(newSession));
+        return newSession;
+    });
+}, [currentQuestionIndex, testId]);
   
   const submitTest = useCallback(() => {
     if (!session) return;
@@ -103,7 +117,7 @@ export function TestInterface({ testId }: { testId: string }) {
     };
     
     localStorage.setItem(`test_result_${session.id}`, JSON.stringify(result));
-    toast({ title: 'Test Submitted!', description: 'Your results have been calculated.' });
+    toast({ title: 'Test Submitted! 🎉', description: 'Your results have been calculated.' });
     router.replace(`/results/${session.id}`);
 
   }, [session, router]);
@@ -129,7 +143,7 @@ export function TestInterface({ testId }: { testId: string }) {
     } else if (selectedOption !== undefined) {
         newAnswers[questionIndex] = { ...currentAnswer, selectedOption, status: currentAnswer.status === 'marked-for-review' || currentAnswer.status === 'answered-and-marked-for-review' ? 'answered-and-marked-for-review' : 'answered' };
     } else { // Clear response
-        newAnswers[questionIndex] = { selectedOption: undefined, status: 'not-answered' };
+        newAnswers[questionIndex] = { ...currentAnswer, selectedOption: undefined, status: 'not-answered' };
     }
 
     const newSession = { ...session, userAnswers: newAnswers };
@@ -149,7 +163,7 @@ export function TestInterface({ testId }: { testId: string }) {
     } else if (currentStatus === 'answered-and-marked-for-review') {
       newStatus = 'answered';
     } else if (currentStatus === 'marked-for-review') {
-      newStatus = 'not-visited';
+      newStatus = 'not-answered';
     } else {
       newStatus = 'marked-for-review';
     }
@@ -181,35 +195,43 @@ export function TestInterface({ testId }: { testId: string }) {
       <main className="flex-1 p-4 md:p-6 overflow-y-auto">
         <Card className="h-full flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Question {currentQuestionIndex + 1} of {session.questions.length}</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <ClipboardList className="h-6 w-6 text-primary" />
+              Question {currentQuestionIndex + 1} of {session.questions.length}
+            </CardTitle>
             {timeLeft !== null && <div className="text-xl font-mono font-semibold tabular-nums text-right"><span className="text-muted-foreground">Time Left:</span> {formatTime(timeLeft)}</div>}
           </CardHeader>
           <CardContent className="flex-1 space-y-6">
             <p className="text-lg font-semibold leading-relaxed">{currentQuestion.questionText}</p>
-            <RadioGroup value={currentUserAnswer?.selectedOption?.toString()} onValueChange={handleOptionChange}>
+            <RadioGroup key={currentQuestionIndex} value={currentUserAnswer?.selectedOption?.toString()} onValueChange={handleOptionChange} className="space-y-4">
                 {currentQuestion.options.map((option, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                        <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                        <Label htmlFor={`option-${index}`} className="text-base cursor-pointer">{option}</Label>
-                    </div>
+                    <Label key={index} htmlFor={`option-${index}`} className={cn(
+                        "flex items-center rounded-lg border p-4 transition-all cursor-pointer text-base",
+                        "hover:border-primary hover:bg-accent/50",
+                        currentUserAnswer?.selectedOption === index && "border-primary bg-accent ring-2 ring-primary"
+                     )}>
+                        <RadioGroupItem value={index.toString()} id={`option-${index}`} className="h-5 w-5"/>
+                        <span className="ml-4 font-semibold">{String.fromCharCode(65 + index)}.</span>
+                        <span className="ml-2 flex-1">{option}</span>
+                    </Label>
                 ))}
             </RadioGroup>
           </CardContent>
           <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className='flex gap-2'>
               <Button variant="outline" onClick={handleMarkForReview}><Bookmark className="mr-2 h-4 w-4"/>Mark for Review</Button>
-              <Button variant="destructive" onClick={clearResponse}>Clear Response</Button>
+              <Button variant="ghost" onClick={clearResponse}>Clear Response</Button>
             </div>
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => setCurrentQuestionIndex(p => Math.max(0, p - 1))} disabled={currentQuestionIndex === 0}><ChevronLeft className="mr-2 h-4 w-4"/>Previous</Button>
               {currentQuestionIndex < session.questions.length - 1 ? (
-                <Button onClick={() => setCurrentQuestionIndex(p => Math.min(session.questions.length - 1, p + 1))}><ChevronRight className="mr-2 h-4 w-4"/>Next</Button>
+                <Button onClick={() => setCurrentQuestionIndex(p => Math.min(session.questions.length - 1, p + 1))}>Save & Next <ChevronRight className="ml-2 h-4 w-4"/></Button>
               ) : (
                  <AlertDialog>
                     <AlertDialogTrigger asChild><Button variant="default">Submit Test</Button></AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
+                            <AlertDialogTitle>Ready to finish?</AlertDialogTitle>
                             <AlertDialogDescription>
                                 This will end the test and calculate your score. You cannot go back after submitting.
                             </AlertDialogDescription>
@@ -225,17 +247,17 @@ export function TestInterface({ testId }: { testId: string }) {
           </CardFooter>
         </Card>
       </main>
-      <aside className="w-full md:w-72 border-l p-4 bg-card flex flex-col">
-        <h3 className="text-lg font-semibold mb-4">Question Palette</h3>
+      <aside className="w-full md:w-80 border-l p-4 bg-card flex flex-col">
+        <h3 className="text-lg font-semibold mb-4 text-center">Question Palette</h3>
         <ScrollArea className="flex-1">
-          <div className="grid grid-cols-5 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-6 md:grid-cols-5 gap-2">
             {session.questions.map((_, index) => (
               <Button
                 key={index}
                 variant="outline"
                 size="icon"
                 onClick={() => setCurrentQuestionIndex(index)}
-                className={`h-12 w-12 text-lg font-semibold ${index === currentQuestionIndex ? 'ring-2 ring-primary ring-offset-2' : ''} ${getStatusColor(session.userAnswers[index].status)} text-white`}
+                className={`h-12 w-12 text-lg font-semibold transition-all ${index === currentQuestionIndex ? 'ring-2 ring-primary ring-offset-2 scale-110' : ''} ${getStatusColor(session.userAnswers[index].status)}`}
               >
                 {index + 1}
               </Button>
@@ -243,11 +265,11 @@ export function TestInterface({ testId }: { testId: string }) {
           </div>
         </ScrollArea>
         <div className="mt-4 space-y-2 text-sm">
-            <div className="flex items-center gap-2"><div className="h-4 w-4 rounded-full bg-green-500"/> Answered</div>
-            <div className="flex items-center gap-2"><div className="h-4 w-4 rounded-full bg-red-500"/> Not Answered</div>
-            <div className="flex items-center gap-2"><div className="h-4 w-4 rounded-full bg-purple-500"/> Marked for Review</div>
-            <div className="flex items-center gap-2"><div className="h-4 w-4 rounded-full bg-yellow-500"/> Answered & Marked</div>
-            <div className="flex items-center gap-2"><div className="h-4 w-4 rounded-full bg-muted border"/> Not Visited</div>
+            <div className="flex items-center gap-2"><span className="flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-white">✓</span> Answered</div>
+            <div className="flex items-center gap-2"><span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500"/> Not Answered</div>
+            <div className="flex items-center gap-2"><span className="flex h-4 w-4 items-center justify-center rounded-full bg-purple-500 text-white text-xs">🔖</span> Marked for Review</div>
+            <div className="flex items-center gap-2"><span className="flex h-4 w-4 items-center justify-center rounded-full bg-yellow-500 text-yellow-900 text-xs">✍️</span> Answered & Marked</div>
+            <div className="flex items-center gap-2"><span className="flex h-4 w-4 items-center justify-center rounded-full bg-muted border"/> Not Visited</div>
         </div>
          <AlertDialog>
             <AlertDialogTrigger asChild><Button className="w-full mt-4" variant="destructive">End Test</Button></AlertDialogTrigger>
