@@ -28,7 +28,7 @@ export type UserConfiguration = {
 export type Question = Awaited<ReturnType<typeof generateMockExamQuestions>>[0];
 
 export type UserAnswer = {
-  selectedOption?: number;
+  selectedOption: number | null;
   status: 'not-visited' | 'not-answered' | 'answered' | 'marked-for-review' | 'answered-and-marked-for-review';
 };
 

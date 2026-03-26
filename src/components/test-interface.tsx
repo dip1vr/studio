@@ -232,7 +232,7 @@ export function TestInterface({ testId }: { testId: string }) {
         newSession = { ...session, userAnswers: newAnswers };
     } else { // Clear response
         const newStatus = currentAnswer.status === 'answered-and-marked-for-review' ? 'marked-for-review' : 'not-answered';
-        newAnswers[questionIndex] = { ...currentAnswer, selectedOption: undefined, status: newStatus };
+        newAnswers[questionIndex] = { ...currentAnswer, selectedOption: null, status: newStatus };
         newSession = { ...session, userAnswers: newAnswers };
     }
 
@@ -259,7 +259,7 @@ export function TestInterface({ testId }: { testId: string }) {
   };
 
   const clearResponse = () => {
-      updateAnswer(currentQuestionIndex, undefined);
+      updateAnswer(currentQuestionIndex);
   };
   
   const handleQuestionSelect = (index: number) => {

@@ -1,6 +1,7 @@
+
 "use client";
 import { useState, useEffect } from 'react';
-import { notFound, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts';
@@ -211,7 +212,7 @@ export function ResultPageClient({ resultId }: { resultId: string }) {
             {session.questions.map((q, i) => {
               const userAnswer = session.userAnswers[i];
               const isCorrect = userAnswer.selectedOption === q.correctAnswerIndex;
-              const answeredIncorrectly = userAnswer.selectedOption !== undefined && !isCorrect;
+              const answeredIncorrectly = userAnswer.selectedOption !== null && !isCorrect;
 
               return (
                 <AccordionItem value={`item-${i}`} key={i}>

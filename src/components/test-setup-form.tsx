@@ -149,7 +149,10 @@ export function TestSetupForm() {
           id: testId,
           config: values,
           questions,
-          userAnswers: Array(questions.length).fill({ status: 'not-visited' }),
+          userAnswers: questions.map(() => ({
+            status: 'not-visited',
+            selectedOption: null,
+          })),
           startTime: Date.now(),
         };
 
