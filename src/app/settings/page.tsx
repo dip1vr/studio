@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,16 +69,23 @@ export default function SettingsPage() {
 
   return (
     <div className="container mx-auto max-w-2xl py-12 space-y-8">
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Action Required: Configure Server API Key</AlertTitle>
-        <AlertDescription>
-          For AI test generation to work, the server needs your API key.
-          Please create a file named <strong>.env</strong> in your project's root directory and add your key:
-          <pre className="mt-2 rounded-md bg-primary/10 p-2 text-sm font-mono text-destructive-foreground">
+      <Alert variant="destructive" className="p-6">
+        <AlertTriangle className="h-6 w-6" />
+        <AlertTitle className="text-xl font-bold">IMPORTANT: How to Fix the API Key Error</AlertTitle>
+        <AlertDescription className="text-base mt-2">
+          The API key you enter below is saved <strong>only in your browser</strong>.
+          <br />
+          The AI that generates tests runs on the server and <strong>CANNOT</strong> access it.
+          <div className="my-4 font-bold text-lg">
+            To make the AI work, you MUST create a <strong>.env</strong> file.
+          </div>
+          1. In the file explorer on the left, create a new file named <code className="bg-muted px-2 py-1 rounded">.env</code> in the main project folder.
+          <br />
+          2. Add this exact line to the file:
+          <pre className="mt-2 rounded-md bg-primary/10 p-4 text-base font-mono text-destructive-foreground">
             GEMINI_API_KEY=YOUR_API_KEY_HERE
           </pre>
-           <p className="mt-2 text-xs">The API key field on this page saves the key only in your browser for potential future use and will **not** work for generating tests.</p>
+          <p className="mt-2">Replace <strong>YOUR_API_KEY_HERE</strong> with your real Gemini API key.</p>
         </AlertDescription>
       </Alert>
 
@@ -85,7 +93,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="font-headline">AI Settings</CardTitle>
           <CardDescription>
-            Manage your AI provider and other preferences. Settings are saved in your browser.
+            Manage your AI provider and other preferences.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -100,8 +108,8 @@ export default function SettingsPage() {
                     <FormControl>
                       <Input type="password" placeholder="Enter API key for browser storage" {...field} />
                     </FormControl>
-                    <FormDescription>
-                     This key is stored only in your browser. It is NOT used for server-side test generation.
+                    <FormDescription className="text-destructive font-bold">
+                     WARNING: This key is NOT used for test generation. You must use the .env file as explained above.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -143,7 +151,7 @@ export default function SettingsPage() {
                 )}
               />
               
-              <Button type="submit">Save Preferences</Button>
+              <Button type="submit">Save Key in Browser</Button>
             </form>
           </Form>
         </CardContent>
