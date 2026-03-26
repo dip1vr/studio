@@ -30,6 +30,10 @@ export function LoginButton() {
   const handleSignIn = () => {
     if (!auth) return;
     signInWithPopup(auth, provider).catch((error) => {
+      // Don't show an error toast if the user simply closed the popup.
+      if (error.code === 'auth/popup-closed-by-user') {
+        return;
+      }
       console.error('Google sign-in error', error);
       toast({
         title: 'Sign-in Failed',
