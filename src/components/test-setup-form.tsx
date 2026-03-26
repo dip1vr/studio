@@ -257,7 +257,7 @@ export function TestSetupForm() {
                 <FormItem>
                   <FormLabel>Time Limit (minutes, optional)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g., 60" {...field} onChange={event => field.onChange(+event.target.value)} />
+                    <Input type="number" placeholder="e.g., 60" {...field} value={field.value ?? ''} onChange={event => field.onChange(event.target.value === '' ? undefined : +event.target.value)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -286,7 +286,7 @@ export function TestSetupForm() {
                     <FormItem>
                       <FormLabel>Negative Marking Ratio</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" placeholder="e.g., 0.25 for 1/4th" {...field} onChange={event => field.onChange(+event.target.value)} />
+                        <Input type="number" step="0.01" placeholder="e.g., 0.25 for 1/4th" {...field} value={field.value ?? ''} onChange={event => field.onChange(event.target.value === '' ? undefined : +event.target.value)} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
