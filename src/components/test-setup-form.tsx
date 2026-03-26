@@ -72,7 +72,8 @@ export function TestSetupForm() {
     if (examValue) {
       const availableSubjects = SUBJECTS[examValue] || [];
       setSubjects(availableSubjects);
-      if(!availableSubjects.includes(form.getValues('subject') || '')) {
+      const currentSubject = form.getValues('subject');
+      if(currentSubject && currentSubject !== 'all' && !availableSubjects.includes(currentSubject)) {
         form.resetField("subject", { defaultValue: undefined });
         form.resetField("topic", { defaultValue: undefined });
       }
@@ -87,7 +88,8 @@ export function TestSetupForm() {
     if (examValue && subjectValue) {
         const availableTopics = TOPICS[examValue]?.[subjectValue] || [];
         setTopics(availableTopics);
-        if(!availableTopics.includes(form.getValues('topic') || '')) {
+        const currentTopic = form.getValues('topic');
+        if(currentTopic && currentTopic !== 'all' && !availableTopics.includes(currentTopic)) {
             form.resetField("topic", { defaultValue: undefined });
         }
     } else {
@@ -102,8 +104,8 @@ export function TestSetupForm() {
       try {
         const questions = await generateMockExamQuestions({
           exam: values.exam,
-          subject: values.subject,
-          topic: values.topic,
+          subject: values.subject === 'all' ? undefined : values.subject,
+          topic: values.topic === 'all' ? undefined : values.topic,
           numberOfQuestions: values.numberOfQuestions,
           difficulty: values.difficulty,
           language: values.language,
@@ -160,7 +162,7 @@ export function TestSetupForm() {
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="Select an exam" /></SelectTrigger>
                     </FormControl>
-                    <SelectContent><SelectItem value="" disabled>Select an exam</SelectItem>{EXAMS.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
+                    <SelectContent>{EXAMS.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
@@ -172,11 +174,11 @@ export function TestSetupForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Subject (Optional)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ''} disabled={subjects.length === 0}>
+                  <Select onValueChange={field.onChange} value={field.value || 'all'} disabled={subjects.length === 0}>
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="Select a subject" /></SelectTrigger>
                     </FormControl>
-                    <SelectContent><SelectItem value="" >All Subjects</SelectItem>{subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    <SelectContent><SelectItem value="all" >All Subjects</SelectItem>{subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
@@ -188,11 +190,11 @@ export function TestSetupForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Topic (Optional)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ''} disabled={topics.length === 0}>
+                  <Select onValueChange={field.onChange} value={field.value || 'all'} disabled={topics.length === 0}>
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="Select a topic" /></SelectTrigger>
                     </FormControl>
-                    <SelectContent><SelectItem value="">All Topics</SelectItem>{topics.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                    <SelectContent><SelectItem value="all">All Topics</SelectItem>{topics.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
