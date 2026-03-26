@@ -11,13 +11,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import type { AIProvider } from "@/lib/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { Terminal, AlertTriangle } from "lucide-react";
 
-// Schema only manages the provider selection now.
+// Schema for all settings, including the optional API key for client-side storage
 const settingsSchema = z.object({
   activeProvider: z.enum(["gemini", "claude", "openai", "deepseek"]),
+  apiKey: z.string().optional(),
 });
 
 const PROVIDERS: { id: AIProvider, name: string }[] = [
@@ -34,15 +36,16 @@ export default function SettingsPage() {
     resolver: zodResolver(settingsSchema),
     defaultValues: {
       activeProvider: 'gemini',
+      apiKey: "", // Default to empty string to ensure input is always controlled
     },
   });
 
   useEffect(() => {
-    // Only loading the provider setting.
+    // Load all settings from localStorage
     const savedSettings = localStorage.getItem("ai_settings");
     if (savedSettings) {
       const parsedSettings = JSON.parse(savedSettings);
-      form.reset({ activeProvider: parsedSettings.activeProvider });
+      form.reset(parsedSettings);
     }
     setIsMounted(true);
   }, [form]);
@@ -52,28 +55,56 @@ export default function SettingsPage() {
   }
 
   function onSubmit(values: z.infer<typeof settingsSchema>) {
-    // Only saving the provider setting.
+    // Save all settings to localStorage
     localStorage.setItem("ai_settings", JSON.stringify(values));
     toast({
       title: "Settings Saved",
-      description: "Your AI provider preference has been updated.",
+      description: "Your AI preferences have been saved in your browser.",
     });
   }
 
   return (
     <div className="container mx-auto max-w-2xl py-12 space-y-8">
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Action Required: Configure Server API Key</AlertTitle>
+        <AlertDescription>
+          For AI test generation to work, the server needs your API key.
+          Please create a file named <strong>.env</strong> in your project's root directory and add your key:
+          <pre className="mt-2 rounded-md bg-primary/10 p-2 text-sm font-mono text-destructive-foreground">
+            GEMINI_API_KEY=YOUR_API_KEY_HERE
+          </pre>
+           <p className="mt-2 text-xs">The API key field on this page saves the key only in your browser for potential future use and will **not** work for generating tests.</p>
+        </AlertDescription>
+      </Alert>
+
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">AI Provider Settings</CardTitle>
+          <CardTitle className="font-headline">AI Settings</CardTitle>
           <CardDescription>
-            Select your preferred AI provider for generating tests.
-            <br />
-            <span className="text-destructive font-medium">Note: Only Google Gemini is currently supported for backend operations. Other providers are for future use.</span>
+            Manage your AI provider and other preferences. Settings are saved in your browser.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+               <FormField
+                control={form.control}
+                name="apiKey"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gemini API Key (Browser Storage)</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="Enter API key for browser storage" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                     This key is stored only in your browser. It is NOT used for server-side test generation.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="activeProvider"
@@ -83,7 +114,7 @@ export default function SettingsPage() {
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                         className="grid grid-cols-1 md:grid-cols-2 gap-4"
                       >
                         {PROVIDERS.map(provider => (
@@ -101,28 +132,19 @@ export default function SettingsPage() {
                         ))}
                       </RadioGroup>
                     </FormControl>
+                     <FormDescription>
+                        Currently, only Google Gemini is supported for backend operations.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              <Button type="submit">Save Preference</Button>
+              <Button type="submit">Save Preferences</Button>
             </form>
           </Form>
         </CardContent>
       </Card>
-      
-      <Alert>
-        <Terminal className="h-4 w-4" />
-        <AlertTitle>Server API Key Configuration</AlertTitle>
-        <AlertDescription>
-          For AI features to work, you must provide an API key for the server. 
-          Create a file named <strong>.env</strong> in the project's root directory and add your Google Gemini API key:
-          <pre className="mt-2 rounded-md bg-muted p-2 text-sm">
-            GEMINI_API_KEY=YOUR_API_KEY_HERE
-          </pre>
-        </AlertDescription>
-      </Alert>
     </div>
   );
 }
