@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { CheckCircle, XCircle, AlertCircle, Clock, BarChart2, Lightbulb } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/hooks/use-toast';
 
 import type { TestResult, TestSession } from '@/lib/types';
 import { offerPersonalizedStudySuggestions } from '@/ai/flows/offer-personalized-study-suggestions';
@@ -22,6 +23,7 @@ const COLORS = {
 };
 
 export default function ResultPage({ params }: { params: { resultId: string } }) {
+  const { resultId } = params;
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
@@ -29,14 +31,14 @@ export default function ResultPage({ params }: { params: { resultId: string } })
 
   const resultRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return doc(firestore, 'users', user.uid, 'testResults', params.resultId);
-  }, [user, firestore, params.resultId]);
+    return doc(firestore, 'users', user.uid, 'testResults', resultId);
+  }, [user, firestore, resultId]);
   const { data: result, isLoading: resultIsLoading } = useDoc<TestResult>(resultRef);
 
   const sessionRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return doc(firestore, 'users', user.uid, 'userTests', params.resultId);
-  }, [user, firestore, params.resultId]);
+    return doc(firestore, 'users', user.uid, 'userTests', resultId);
+  }, [user, firestore, resultId]);
   const { data: session, isLoading: sessionIsLoading } = useDoc<TestSession>(sessionRef);
   
   useEffect(() => {
