@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { toast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, Bookmark, Circle, CheckCircle, LayoutGrid } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bookmark, Circle, CheckCircle, LayoutGrid, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUser, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -37,7 +37,7 @@ const PaletteContent = ({
             let statusClass = '';
             switch (status) {
               case 'answered': statusClass = 'bg-green-500/20 border-green-500 text-green-700 dark:text-green-400'; break;
-              case 'not-answered': statusClass = 'bg-blue-500/20 border-blue-500 text-blue-700 dark:text-blue-400'; break;
+              case 'not-answered': statusClass = 'bg-red-500/20 border-red-500 text-red-700 dark:text-red-400'; break;
               case 'marked-for-review': statusClass = 'bg-purple-500/20 border-purple-500 text-purple-700 dark:text-purple-400'; break;
               case 'answered-and-marked-for-review': statusClass = 'bg-yellow-500/20 border-yellow-500 text-yellow-700 dark:text-yellow-400'; break;
               default: statusClass = 'bg-muted hover:bg-muted/80 border';
@@ -62,43 +62,14 @@ const PaletteContent = ({
       </ScrollArea>
       <div className="mt-4 space-y-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Answered</div>
-        <div className="flex items-center gap-2"><Circle className="h-4 w-4 text-blue-500" /> Not Answered</div>
+        <div className="flex items-center gap-2"><XCircle className="h-4 w-4 text-red-500" /> Not Answered</div>
         <div className="flex items-center gap-2"><Bookmark className="h-4 w-4 text-purple-500" /> Marked for Review</div>
-        <div className="flex items-center gap-2"><Bookmark className="h-4 w-4 text-yellow-500 fill-yellow-500" /> Answered & Marked</div>
+        <div className="flex items-center gap-2"><Bookmark className="h-4 w-4 text-yellow-500 fill-current" /> Answered & Marked</div>
         <div className="flex items-center gap-2"><Circle className="h-4 w-4 text-muted-foreground" /> Not Visited</div>
       </div>
     </>
   );
 };
-
-const SummaryBar = ({ counts }: { counts: any }) => {
-    if (!counts) return null;
-    const total = counts.answered + counts.notAnswered + counts.markedForReview + counts.answeredAndMarked + counts.notVisited;
-    return (
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs w-full">
-            <div className="flex items-center gap-1.5" title="Answered">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="font-semibold">{counts.answered + counts.answeredAndMarked}</span>
-                <span className="hidden sm:inline">Answered</span>
-            </div>
-            <div className="flex items-center gap-1.5" title="Not Answered (Skipped)">
-                <XCircle className="h-4 w-4 text-red-500" />
-                <span className="font-semibold">{counts.notAnswered}</span>
-                 <span className="hidden sm:inline">Skipped</span>
-            </div>
-            <div className="flex items-center gap-1.5" title="Marked for Review">
-                <Bookmark className="h-4 w-4 text-purple-500" />
-                <span className="font-semibold">{counts.markedForReview + counts.answeredAndMarked}</span>
-                 <span className="hidden sm:inline">Marked</span>
-            </div>
-            <div className="flex items-center gap-1.5" title="Not Visited">
-                <Circle className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="font-semibold">{counts.notVisited}</span>
-                 <span className="hidden sm:inline">Not Visited</span>
-            </div>
-        </div>
-    );
-}
 
 
 export function TestInterface({ testId }: { testId: string }) {
@@ -139,37 +110,6 @@ export function TestInterface({ testId }: { testId: string }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, session]);
   
-  const summaryCounts = useMemo(() => {
-    if (!session) return null;
-    const counts = {
-      answered: 0,
-      notAnswered: 0,
-      markedForReview: 0,
-      answeredAndMarked: 0,
-      notVisited: 0,
-    };
-    for (const answer of session.userAnswers) {
-      switch (answer.status) {
-        case 'answered':
-          counts.answered++;
-          break;
-        case 'not-answered':
-          counts.notAnswered++;
-          break;
-        case 'marked-for-review':
-          counts.markedForReview++;
-          break;
-        case 'answered-and-marked-for-review':
-          counts.answeredAndMarked++;
-          break;
-        case 'not-visited':
-          counts.notVisited++;
-          break;
-      }
-    }
-    return counts;
-  }, [session]);
-
   const submitTest = useCallback(() => {
     if (!session || !user || !firestore) {
         if (!user) {
@@ -185,7 +125,7 @@ export function TestInterface({ testId }: { testId: string }) {
 
     session.questions.forEach((q, i) => {
         const userAnswer = session.userAnswers[i];
-        if (userAnswer.status === 'not-visited' || userAnswer.status === 'not-answered') {
+        if (userAnswer.status === 'not-visited' || userAnswer.status === 'not-answered' || userAnswer.status === 'marked-for-review') {
             skipped++;
         } else if (userAnswer.selectedOption === q.correctAnswerIndex) {
             correctAnswers++;
@@ -338,7 +278,7 @@ export function TestInterface({ testId }: { testId: string }) {
                   </div>
 
                 <div className='flex items-center gap-4'>
-                    {timeLeft !== null && <div className="text-xl font-mono font-semibold tabular-nums text-right shrink-0"><span className="text-muted-foreground text-sm block">Time Left</span> {formatTime(timeLeft)}</div>}
+                    {timeLeft !== null && <div className="text-lg font-mono font-semibold tabular-nums text-right shrink-0"><span className="text-muted-foreground text-sm block">Time Left</span> {formatTime(timeLeft)}</div>}
                     <Sheet open={isPaletteOpen} onOpenChange={setIsPaletteOpen}>
                         <SheetTrigger asChild>
                             <Button variant="outline" size="icon" className="md:hidden">
@@ -386,7 +326,6 @@ export function TestInterface({ testId }: { testId: string }) {
                 </RadioGroup>
               </CardContent>
               <CardFooter className="flex flex-col items-center gap-4 border-t pt-4">
-                {summaryCounts && <SummaryBar counts={summaryCounts} />}
                 <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 w-full pt-2">
                     <div className='flex gap-2 flex-wrap'>
                       <Button variant="outline" onClick={handleMarkForReview}><Bookmark className="mr-2 h-4 w-4"/>Mark for Review</Button>
@@ -442,5 +381,4 @@ export function TestInterface({ testId }: { testId: string }) {
   );
 }
 
-// Add XCircle to lucide-react imports
-import { XCircle } from 'lucide-react';
+    
