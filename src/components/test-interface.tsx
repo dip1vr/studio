@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import type { TestSession, UserAnswer, Question, TestResult } from '@/lib/types';
@@ -19,17 +19,14 @@ import { useUser, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-// Palette content extracted into its own component for reuse
 const PaletteContent = ({
   session,
   currentQuestionIndex,
   onQuestionSelect,
-  onSubmit,
 }: {
   session: TestSession;
   currentQuestionIndex: number;
   onQuestionSelect: (index: number) => void;
-  onSubmit: () => void;
 }) => {
   return (
     <>
@@ -70,24 +67,38 @@ const PaletteContent = ({
         <div className="flex items-center gap-2"><Bookmark className="h-4 w-4 text-yellow-500 fill-yellow-500" /> Answered & Marked</div>
         <div className="flex items-center gap-2"><Circle className="h-4 w-4 text-muted-foreground" /> Not Visited</div>
       </div>
-       <AlertDialog>
-          <AlertDialogTrigger asChild><Button className="w-full mt-4" variant="destructive">End Test</Button></AlertDialogTrigger>
-          <AlertDialogContent>
-              <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                      This will end the test and calculate your score. You cannot go back after submitting.
-                  </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={onSubmit}>Submit Test</AlertDialogAction>
-              </AlertDialogFooter>
-          </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 };
+
+const SummaryBar = ({ counts }: { counts: any }) => {
+    if (!counts) return null;
+    const total = counts.answered + counts.notAnswered + counts.markedForReview + counts.answeredAndMarked + counts.notVisited;
+    return (
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs w-full">
+            <div className="flex items-center gap-1.5" title="Answered">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span className="font-semibold">{counts.answered + counts.answeredAndMarked}</span>
+                <span className="hidden sm:inline">Answered</span>
+            </div>
+            <div className="flex items-center gap-1.5" title="Not Answered (Skipped)">
+                <XCircle className="h-4 w-4 text-red-500" />
+                <span className="font-semibold">{counts.notAnswered}</span>
+                 <span className="hidden sm:inline">Skipped</span>
+            </div>
+            <div className="flex items-center gap-1.5" title="Marked for Review">
+                <Bookmark className="h-4 w-4 text-purple-500" />
+                <span className="font-semibold">{counts.markedForReview + counts.answeredAndMarked}</span>
+                 <span className="hidden sm:inline">Marked</span>
+            </div>
+            <div className="flex items-center gap-1.5" title="Not Visited">
+                <Circle className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-semibold">{counts.notVisited}</span>
+                 <span className="hidden sm:inline">Not Visited</span>
+            </div>
+        </div>
+    );
+}
 
 
 export function TestInterface({ testId }: { testId: string }) {
@@ -128,6 +139,37 @@ export function TestInterface({ testId }: { testId: string }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, session]);
   
+  const summaryCounts = useMemo(() => {
+    if (!session) return null;
+    const counts = {
+      answered: 0,
+      notAnswered: 0,
+      markedForReview: 0,
+      answeredAndMarked: 0,
+      notVisited: 0,
+    };
+    for (const answer of session.userAnswers) {
+      switch (answer.status) {
+        case 'answered':
+          counts.answered++;
+          break;
+        case 'not-answered':
+          counts.notAnswered++;
+          break;
+        case 'marked-for-review':
+          counts.markedForReview++;
+          break;
+        case 'answered-and-marked-for-review':
+          counts.answeredAndMarked++;
+          break;
+        case 'not-visited':
+          counts.notVisited++;
+          break;
+      }
+    }
+    return counts;
+  }, [session]);
+
   const submitTest = useCallback(() => {
     if (!session || !user || !firestore) {
         if (!user) {
@@ -143,7 +185,7 @@ export function TestInterface({ testId }: { testId: string }) {
 
     session.questions.forEach((q, i) => {
         const userAnswer = session.userAnswers[i];
-        if (userAnswer.selectedOption === undefined) {
+        if (userAnswer.status === 'not-visited' || userAnswer.status === 'not-answered') {
             skipped++;
         } else if (userAnswer.selectedOption === q.correctAnswerIndex) {
             correctAnswers++;
@@ -231,7 +273,8 @@ export function TestInterface({ testId }: { testId: string }) {
         newAnswers[questionIndex] = { ...currentAnswer, ...statusUpdate };
         newSession = { ...session, userAnswers: newAnswers };
     } else { // Clear response
-        newAnswers[questionIndex] = { ...currentAnswer, selectedOption: undefined, status: 'not-answered' };
+        const newStatus = currentAnswer.status === 'answered-and-marked-for-review' ? 'marked-for-review' : 'not-answered';
+        newAnswers[questionIndex] = { ...currentAnswer, selectedOption: undefined, status: newStatus };
         newSession = { ...session, userAnswers: newAnswers };
     }
 
@@ -304,12 +347,25 @@ export function TestInterface({ testId }: { testId: string }) {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right" className="w-[300px] p-4 flex flex-col">
-                            <SheetHeader className="mb-4 text-center">
-                                <SheetTitle>Question Palette</SheetTitle>
-                            </SheetHeader>
-                            <div className="flex-1 min-h-0">
-                                <PaletteContent session={session} currentQuestionIndex={currentQuestionIndex} onQuestionSelect={handleQuestionSelect} onSubmit={submitTest}/>
-                            </div>
+                           <SheetHeader className="mb-4 text-center">
+                               <SheetTitle>Question Palette</SheetTitle>
+                           </SheetHeader>
+                           <PaletteContent session={session} currentQuestionIndex={currentQuestionIndex} onQuestionSelect={handleQuestionSelect}/>
+                           <AlertDialog>
+                              <AlertDialogTrigger asChild><Button className="w-full mt-4" variant="destructive">End Test</Button></AlertDialogTrigger>
+                              <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                          This will end the test and calculate your score. You cannot go back after submitting.
+                                      </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={submitTest}>Submit Test</AlertDialogAction>
+                                  </AlertDialogFooter>
+                              </AlertDialogContent>
+                          </AlertDialog>
                         </SheetContent>
                     </Sheet>
                 </div>
@@ -329,32 +385,35 @@ export function TestInterface({ testId }: { testId: string }) {
                     ))}
                 </RadioGroup>
               </CardContent>
-              <CardFooter className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 border-t pt-6">
-                <div className='flex gap-2 flex-wrap'>
-                  <Button variant="outline" onClick={handleMarkForReview}><Bookmark className="mr-2 h-4 w-4"/>Mark for Review</Button>
-                  <Button variant="ghost" onClick={clearResponse}>Clear Response</Button>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="secondary" onClick={() => setCurrentQuestionIndex(p => Math.max(0, p - 1))} disabled={currentQuestionIndex === 0}><ChevronLeft className="mr-2 h-4 w-4"/>Previous</Button>
-                  {currentQuestionIndex < session.questions.length - 1 ? (
-                    <Button onClick={() => setCurrentQuestionIndex(p => Math.min(session.questions.length - 1, p + 1))}>Save & Next <ChevronRight className="ml-2 h-4 w-4"/></Button>
-                  ) : (
-                     <AlertDialog>
-                        <AlertDialogTrigger asChild><Button variant="default">Review & Submit</Button></AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Ready to finish?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This will end the test and calculate your score. You cannot go back after submitting.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={submitTest}>Submit</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                  )}
+              <CardFooter className="flex flex-col items-center gap-4 border-t pt-4">
+                {summaryCounts && <SummaryBar counts={summaryCounts} />}
+                <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 w-full pt-2">
+                    <div className='flex gap-2 flex-wrap'>
+                      <Button variant="outline" onClick={handleMarkForReview}><Bookmark className="mr-2 h-4 w-4"/>Mark for Review</Button>
+                      <Button variant="ghost" onClick={clearResponse}>Clear Response</Button>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="secondary" onClick={() => setCurrentQuestionIndex(p => Math.max(0, p - 1))} disabled={currentQuestionIndex === 0}><ChevronLeft className="mr-2 h-4 w-4"/>Previous</Button>
+                      {currentQuestionIndex < session.questions.length - 1 ? (
+                        <Button onClick={() => setCurrentQuestionIndex(p => Math.min(session.questions.length - 1, p + 1))}>Save & Next <ChevronRight className="ml-2 h-4 w-4"/></Button>
+                      ) : (
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild><Button variant="default">Review & Submit</Button></AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Ready to finish?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This will end the test and calculate your score. You cannot go back after submitting.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={submitTest}>Submit</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
                 </div>
               </CardFooter>
             </Card>
@@ -362,8 +421,26 @@ export function TestInterface({ testId }: { testId: string }) {
       </main>
       <aside className="hidden md:flex w-80 border-l p-4 bg-card flex-col">
         <h3 className="text-lg font-semibold mb-4 text-center">Question Palette</h3>
-        <PaletteContent session={session} currentQuestionIndex={currentQuestionIndex} onQuestionSelect={handleQuestionSelect} onSubmit={submitTest}/>
+        <PaletteContent session={session} currentQuestionIndex={currentQuestionIndex} onQuestionSelect={handleQuestionSelect}/>
+        <AlertDialog>
+          <AlertDialogTrigger asChild><Button className="w-full mt-4" variant="destructive">End Test</Button></AlertDialogTrigger>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      This will end the test and calculate your score. You cannot go back after submitting.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={submitTest}>Submit Test</AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
       </aside>
     </div>
   );
 }
+
+// Add XCircle to lucide-react imports
+import { XCircle } from 'lucide-react';

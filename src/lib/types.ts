@@ -34,7 +34,7 @@ export type UserAnswer = {
 
 export type TestSession = {
   id: string;
-  userId: string;
+  userId?: string; // Make userId optional
   config: ExamConfig;
   questions: Question[];
   userAnswers: UserAnswer[];
