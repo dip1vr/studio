@@ -1,0 +1,783 @@
+{
+  "entities": {
+    "UserConfiguration": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserConfiguration",
+      "type": "object",
+      "description": "Stores application-level settings and preferences for a user, such as selected AI provider and preferred UI language.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserConfiguration entity."
+        },
+        "selectedAiProvider": {
+          "type": "string",
+          "description": "The name of the AI provider currently selected by the user (e.g., 'Google Gemini', 'OpenAI ChatGPT')."
+        },
+        "preferredLanguage": {
+          "type": "string",
+          "description": "The user's preferred language for the application UI ('English', 'Hindi', 'Bilingual')."
+        },
+        "uiMode": {
+          "type": "string",
+          "description": "The user's preferred UI mode ('Light', 'Dark')."
+        },
+        "questionDisplayMode": {
+          "type": "string",
+          "description": "The user's preference for how questions are displayed during a test ('One at a time', 'All at once')."
+        }
+      },
+      "required": [
+        "id",
+        "selectedAiProvider",
+        "preferredLanguage",
+        "uiMode",
+        "questionDisplayMode"
+      ]
+    },
+    "Exam": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Exam",
+      "type": "object",
+      "description": "Represents a type of Indian Government competitive examination, defining its basic attributes.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Exam entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the exam (e.g., 'UPSC Civil Services Examination')."
+        },
+        "shortName": {
+          "type": "string",
+          "description": "The abbreviated name of the exam (e.g., 'UPSC CSE')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the exam, outlining its scope or purpose."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "shortName",
+        "description"
+      ]
+    },
+    "Subject": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Subject",
+      "type": "object",
+      "description": "Represents an academic subject relevant to one or more exams, like History or Mathematics.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Subject entity."
+        },
+        "examId": {
+          "type": "string",
+          "description": "Reference to the Exam this subject primarily belongs to. (Relationship: Exam 1:N Subject)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the subject (e.g., 'History', 'Mathematics', 'Reasoning')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the subject content."
+        }
+      },
+      "required": [
+        "id",
+        "examId",
+        "name",
+        "description"
+      ]
+    },
+    "Topic": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Topic",
+      "type": "object",
+      "description": "Represents a specific topic within a subject, providing granular content organization (e.g., 'Ancient India' within 'History').",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Topic entity."
+        },
+        "subjectId": {
+          "type": "string",
+          "description": "Reference to the Subject this topic belongs to. (Relationship: Subject 1:N Topic)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the topic (e.g., 'Ancient India', 'Algebra', 'Indian Polity Basics')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the topic content."
+        }
+      },
+      "required": [
+        "id",
+        "subjectId",
+        "name",
+        "description"
+      ]
+    },
+    "Question": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Question",
+      "type": "object",
+      "description": "Stores the details of a single multiple-choice question generated for a mock test.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Question entity."
+        },
+        "text": {
+          "type": "string",
+          "description": "The main text of the question to be presented to the user."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Optional URL to an image associated with the question, if applicable.",
+          "format": "uri"
+        },
+        "examId": {
+          "type": "string",
+          "description": "Reference to the Exam this question is primarily relevant to. (Relationship: Exam 1:N Question)"
+        },
+        "subjectId": {
+          "type": "string",
+          "description": "Reference to the Subject this question is primarily relevant to. (Relationship: Subject 1:N Question)"
+        },
+        "topicId": {
+          "type": "string",
+          "description": "Reference to the Topic this question is primarily relevant to. (Relationship: Topic 1:N Question)"
+        },
+        "difficulty": {
+          "type": "string",
+          "description": "The difficulty level of the question ('Easy', 'Medium', 'Hard')."
+        },
+        "correctOptionId": {
+          "type": "string",
+          "description": "Reference to the Option entity that represents the correct answer for this question. (Relationship: Question 1:1 Option)"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "examId",
+        "difficulty",
+        "correctOptionId"
+      ]
+    },
+    "Option": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Option",
+      "type": "object",
+      "description": "Represents a single multiple-choice option for a Question.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Option entity."
+        },
+        "questionId": {
+          "type": "string",
+          "description": "Reference to the Question this option belongs to. (Relationship: Question 1:N Option)"
+        },
+        "text": {
+          "type": "string",
+          "description": "The text content of the option."
+        },
+        "sequence": {
+          "type": "number",
+          "description": "The display order or label of the option (e.g., 1 for A, 2 for B, 3 for C, 4 for D)."
+        }
+      },
+      "required": [
+        "id",
+        "questionId",
+        "text",
+        "sequence"
+      ]
+    },
+    "TestConfiguration": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TestConfiguration",
+      "type": "object",
+      "description": "Stores the specific parameters and settings chosen by the user for a particular mock test session.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the TestConfiguration entity."
+        },
+        "examId": {
+          "type": "string",
+          "description": "Reference to the Exam chosen for this test configuration. (Relationship: Exam 1:N TestConfiguration)"
+        },
+        "subjectId": {
+          "type": "string",
+          "description": "Optional reference to the Subject chosen for this test configuration. (Relationship: Subject 1:N TestConfiguration)"
+        },
+        "topicId": {
+          "type": "string",
+          "description": "Optional reference to the Topic chosen for this test configuration. (Relationship: Topic 1:N TestConfiguration)"
+        },
+        "numberOfQuestions": {
+          "type": "number",
+          "description": "The total number of questions configured for the test."
+        },
+        "difficultyLevel": {
+          "type": "string",
+          "description": "The overall difficulty level for the test ('Easy', 'Medium', 'Hard', 'Mixed')."
+        },
+        "timeLimitMinutes": {
+          "type": "number",
+          "description": "The time limit for the test in minutes (null if no time limit)."
+        },
+        "negativeMarkingEnabled": {
+          "type": "boolean",
+          "description": "Indicates whether negative marking is enabled for this test."
+        },
+        "negativeMarkingRatio": {
+          "type": "number",
+          "description": "The ratio for negative marking (e.g., -0.25 means 0.25 marks deducted for wrong answers)."
+        },
+        "testLanguage": {
+          "type": "string",
+          "description": "The language for the test questions and options ('Hindi', 'English', 'Bilingual')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when this test configuration was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "examId",
+        "numberOfQuestions",
+        "difficultyLevel",
+        "negativeMarkingEnabled",
+        "testLanguage",
+        "createdAt"
+      ]
+    },
+    "UserTest": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserTest",
+      "type": "object",
+      "description": "Represents a single instance of a user attempting a mock test, linking the configuration with the user's answers.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserTest entity."
+        },
+        "testConfigurationId": {
+          "type": "string",
+          "description": "Reference to the TestConfiguration used for this test attempt. (Relationship: TestConfiguration 1:1 UserTest)"
+        },
+        "questionIds": {
+          "type": "array",
+          "description": "An ordered list of IDs for the specific Question entities included in this test instance. (Relationship: UserTest 1:N Question)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The timestamp when the user started the test.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "The timestamp when the test was submitted or auto-submitted (null if still in progress).",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the test ('InProgress', 'Submitted', 'Aborted')."
+        }
+      },
+      "required": [
+        "id",
+        "testConfigurationId",
+        "questionIds",
+        "startTime",
+        "status"
+      ]
+    },
+    "UserAnswer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserAnswer",
+      "type": "object",
+      "description": "Records a user's chosen answer and interaction status for a specific question within a UserTest.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserAnswer entity."
+        },
+        "userTestId": {
+          "type": "string",
+          "description": "Reference to the UserTest this answer belongs to. (Relationship: UserTest 1:N UserAnswer)"
+        },
+        "questionId": {
+          "type": "string",
+          "description": "Reference to the Question to which this answer corresponds. (Relationship: Question 1:N UserAnswer)"
+        },
+        "selectedOptionId": {
+          "type": "string",
+          "description": "Reference to the Option entity chosen by the user (null if skipped or cleared). (Relationship: Option 1:N UserAnswer)"
+        },
+        "status": {
+          "type": "string",
+          "description": "The user's interaction status for this question ('Answered', 'Skipped', 'MarkedForReview', 'AnsweredAndMarkedForReview', 'NotVisited')."
+        },
+        "timeSpentSeconds": {
+          "type": "number",
+          "description": "The estimated time in seconds the user spent on this question."
+        },
+        "lastModifiedAt": {
+          "type": "string",
+          "description": "The timestamp when this user answer was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userTestId",
+        "questionId",
+        "status",
+        "lastModifiedAt"
+      ]
+    },
+    "TestResult": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TestResult",
+      "type": "object",
+      "description": "Stores the comprehensive performance report and summary metrics for a completed UserTest.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the TestResult entity."
+        },
+        "userTestId": {
+          "type": "string",
+          "description": "Reference to the UserTest instance for which this result was generated. (Relationship: UserTest 1:1 TestResult)"
+        },
+        "totalQuestions": {
+          "type": "number",
+          "description": "The total number of questions in the test."
+        },
+        "attemptedQuestions": {
+          "type": "number",
+          "description": "The number of questions attempted by the user."
+        },
+        "skippedQuestions": {
+          "type": "number",
+          "description": "The number of questions skipped by the user."
+        },
+        "correctAnswers": {
+          "type": "number",
+          "description": "The number of questions answered correctly."
+        },
+        "incorrectAnswers": {
+          "type": "number",
+          "description": "The number of questions answered incorrectly."
+        },
+        "totalMarksPossible": {
+          "type": "number",
+          "description": "The maximum marks obtainable for the test, based on configuration."
+        },
+        "obtainedMarks": {
+          "type": "number",
+          "description": "The total marks obtained by the user before negative marking."
+        },
+        "negativeMarksDeducted": {
+          "type": "number",
+          "description": "The total marks deducted due to incorrect answers, as per negative marking rules."
+        },
+        "finalScore": {
+          "type": "number",
+          "description": "The final score of the user after all calculations, including negative marking."
+        },
+        "accuracyPercentage": {
+          "type": "number",
+          "description": "The accuracy percentage of the user (Correct / Attempted * 100)."
+        },
+        "timeTakenMinutes": {
+          "type": "number",
+          "description": "The total time taken by the user to complete the test in minutes."
+        },
+        "timeAllowedMinutes": {
+          "type": "number",
+          "description": "The total time allowed for the test in minutes (derived from TestConfiguration)."
+        },
+        "takenAt": {
+          "type": "string",
+          "description": "The timestamp when the test result was generated (i.e., when the test was completed).",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userTestId",
+        "totalQuestions",
+        "attemptedQuestions",
+        "skippedQuestions",
+        "correctAnswers",
+        "incorrectAnswers",
+        "totalMarksPossible",
+        "obtainedMarks",
+        "negativeMarksDeducted",
+        "finalScore",
+        "accuracyPercentage",
+        "timeTakenMinutes",
+        "takenAt"
+      ]
+    },
+    "QuestionResult": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "QuestionResult",
+      "type": "object",
+      "description": "Details the outcome and feedback for a specific question within a completed TestResult.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the QuestionResult entity."
+        },
+        "testResultId": {
+          "type": "string",
+          "description": "Reference to the TestResult this question outcome belongs to. (Relationship: TestResult 1:N QuestionResult)"
+        },
+        "questionId": {
+          "type": "string",
+          "description": "Reference to the Question entity that was asked. (Relationship: Question 1:N QuestionResult)"
+        },
+        "userSelectedOptionId": {
+          "type": "string",
+          "description": "Reference to the Option entity chosen by the user for this question (null if not answered). (Relationship: Option 1:N QuestionResult)"
+        },
+        "correctOptionId": {
+          "type": "string",
+          "description": "Reference to the Option entity that is the correct answer for this question. (Relationship: Option 1:N QuestionResult)"
+        },
+        "isCorrect": {
+          "type": "boolean",
+          "description": "Indicates whether the user's answer was correct for this question."
+        },
+        "userStatus": {
+          "type": "string",
+          "description": "The final status of the user's interaction with this question ('Answered', 'Skipped', 'MarkedForReview', 'AnsweredAndMarkedForReview')."
+        },
+        "aiExplanation": {
+          "type": "string",
+          "description": "AI-generated explanation for the question and its correct answer, provided for review."
+        }
+      },
+      "required": [
+        "id",
+        "testResultId",
+        "questionId",
+        "correctOptionId",
+        "isCorrect",
+        "userStatus",
+        "aiExplanation"
+      ]
+    },
+    "ImprovementTip": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ImprovementTip",
+      "type": "object",
+      "description": "Stores an AI-generated personalized suggestion for improvement based on a user's performance in a TestResult.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ImprovementTip entity."
+        },
+        "testResultId": {
+          "type": "string",
+          "description": "Reference to the TestResult this improvement tip is associated with. (Relationship: TestResult 1:N ImprovementTip)"
+        },
+        "tipText": {
+          "type": "string",
+          "description": "The actual personalized improvement suggestion generated by the AI."
+        },
+        "relevanceSubjectId": {
+          "type": "string",
+          "description": "Optional reference to a Subject if the tip is specific to a particular subject. (Relationship: Subject 1:N ImprovementTip)"
+        },
+        "relevanceTopicId": {
+          "type": "string",
+          "description": "Optional reference to a Topic if the tip is specific to a particular topic. (Relationship: Topic 1:N ImprovementTip)"
+        }
+      },
+      "required": [
+        "id",
+        "testResultId",
+        "tipText"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}/userConfigurations/{userConfigurationId}",
+        "definition": {
+          "entityName": "UserConfiguration",
+          "schema": {
+            "$ref": "#/backend/entities/UserConfiguration"
+          },
+          "description": "Stores application-level settings and preferences for a user, directly owned by the user. Authorization is path-based: 'request.auth.uid == userId'.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "userConfigurationId",
+              "description": "The unique ID for the user's configuration document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/exams/{examId}",
+        "definition": {
+          "entityName": "Exam",
+          "schema": {
+            "$ref": "#/backend/entities/Exam"
+          },
+          "description": "Stores public data about Indian Government competitive examinations. Readable by all users. Write access for administrators only.",
+          "params": [
+            {
+              "name": "examId",
+              "description": "The unique ID of the exam."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/exams/{examId}/subjects/{subjectId}",
+        "definition": {
+          "entityName": "Subject",
+          "schema": {
+            "$ref": "#/backend/entities/Subject"
+          },
+          "description": "Stores public data about academic subjects related to specific exams. Readable by all users. Write access for administrators only. Includes denormalized 'examId' for context.",
+          "params": [
+            {
+              "name": "examId",
+              "description": "The unique ID of the parent exam."
+            },
+            {
+              "name": "subjectId",
+              "description": "The unique ID of the subject."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/exams/{examId}/subjects/{subjectId}/topics/{topicId}",
+        "definition": {
+          "entityName": "Topic",
+          "schema": {
+            "$ref": "#/backend/entities/Topic"
+          },
+          "description": "Stores public data about specific topics within subjects. Readable by all users. Write access for administrators only. Includes denormalized 'subjectId' for context.",
+          "params": [
+            {
+              "name": "examId",
+              "description": "The unique ID of the parent exam."
+            },
+            {
+              "name": "subjectId",
+              "description": "The unique ID of the parent subject."
+            },
+            {
+              "name": "topicId",
+              "description": "The unique ID of the topic."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/questions/{questionId}",
+        "definition": {
+          "entityName": "Question",
+          "schema": {
+            "$ref": "#/backend/entities/Question"
+          },
+          "description": "Stores the details of all multiple-choice questions, serving as a global question bank. Readable by all users. Write access for administrators or AI systems only. Contains 'examId', 'subjectId', 'topicId' fields for querying.",
+          "params": [
+            {
+              "name": "questionId",
+              "description": "The unique ID of the question."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/questions/{questionId}/options/{optionId}",
+        "definition": {
+          "entityName": "Option",
+          "schema": {
+            "$ref": "#/backend/entities/Option"
+          },
+          "description": "Stores the options for a specific question. Readable by all users. Write access for administrators or AI systems only. Includes denormalized 'questionId' for context.",
+          "params": [
+            {
+              "name": "questionId",
+              "description": "The unique ID of the parent question."
+            },
+            {
+              "name": "optionId",
+              "description": "The unique ID of the option."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/testConfigurations/{testConfigurationId}",
+        "definition": {
+          "entityName": "TestConfiguration",
+          "schema": {
+            "$ref": "#/backend/entities/TestConfiguration"
+          },
+          "description": "Stores user-specific parameters and settings for a mock test session. Directly owned by the user. Authorization is path-based: 'request.auth.uid == userId'.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "testConfigurationId",
+              "description": "The unique ID of the test configuration."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/userTests/{userTestId}",
+        "definition": {
+          "entityName": "UserTest",
+          "schema": {
+            "$ref": "#/backend/entities/UserTest"
+          },
+          "description": "Represents a single instance of a user attempting a mock test. Directly owned by the user. Authorization is path-based: 'request.auth.uid == userId'.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "userTestId",
+              "description": "The unique ID of the user's test attempt."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/userTests/{userTestId}/userAnswers/{userAnswerId}",
+        "definition": {
+          "entityName": "UserAnswer",
+          "schema": {
+            "$ref": "#/backend/entities/UserAnswer"
+          },
+          "description": "Records a user's chosen answer and status for a specific question within a UserTest. Directly owned by the user via parent path. Authorization is path-based: 'request.auth.uid == userId'.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "userTestId",
+              "description": "The unique ID of the parent user test."
+            },
+            {
+              "name": "userAnswerId",
+              "description": "The unique ID of the user's answer."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/testResults/{testResultId}",
+        "definition": {
+          "entityName": "TestResult",
+          "schema": {
+            "$ref": "#/backend/entities/TestResult"
+          },
+          "description": "Stores the comprehensive performance report for a completed UserTest. Directly owned by the user. Includes denormalized 'ownerId' for robust authorization independence and simplified security rules.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "testResultId",
+              "description": "The unique ID of the test result."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/testResults/{testResultId}/questionResults/{questionResultId}",
+        "definition": {
+          "entityName": "QuestionResult",
+          "schema": {
+            "$ref": "#/backend/entities/QuestionResult"
+          },
+          "description": "Details the outcome and feedback for a specific question within a completed TestResult. Directly owned by the user via parent path. Authorization is path-based: 'request.auth.uid == userId'.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "testResultId",
+              "description": "The unique ID of the parent test result."
+            },
+            {
+              "name": "questionResultId",
+              "description": "The unique ID of the question result."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/testResults/{testResultId}/improvementTips/{improvementTipId}",
+        "definition": {
+          "entityName": "ImprovementTip",
+          "schema": {
+            "$ref": "#/backend/entities/ImprovementTip"
+          },
+          "description": "Stores AI-generated personalized improvement suggestions for a user's TestResult. Directly owned by the user via parent path. Authorization is path-based: 'request.auth.uid == userId'.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user."
+            },
+            {
+              "name": "testResultId",
+              "description": "The unique ID of the parent test result."
+            },
+            {
+              "name": "improvementTipId",
+              "description": "The unique ID of the improvement tip."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed with a strong emphasis on Authorization Independence, clarity, and query efficiency, adhering strictly to the core design principles.\n\n**Authorization Independence via Denormalization:**\nThis is a critical aspect, especially for user-owned data. For all private user data, the `userId` is embedded directly into the document path (e.g., `/users/{userId}/...`). This means that any security rule can verify ownership by simply comparing `request.auth.uid` with the `{userId}` wildcard in the path, without needing expensive `get()` operations on parent documents. Specifically for the `TestResult` entity, which represents a user's final test outcome and might be queried independently or used as a parent for further subcollections (QuestionResult, ImprovementTip), we are denormalizing the `ownerId` (which will be `request.auth.uid` at creation) directly into the `TestResult` document. While `userId` is already present in the path `/users/{userId}/testResults/{testResultId}`, explicitly including `ownerId` within the document provides an additional, atomic authorization check, fully satisfying the mandate to avoid hierarchical dependencies and simplifying rules: `allow read, write: if request.auth.uid == resource.data.ownerId;`.\n\n**Structural Segregation and QAPs (Query-Agnostic Permissions):**\n\n1.  **Public Content (Exams, Subjects, Topics, Questions, Options):** These entities represent static, publicly viewable content. They are stored in top-level collections (`/exams`, `/questions`) or nested subcollections that maintain their public nature (`/exams/{examId}/subjects`, `/questions/{questionId}/options`). This structural segregation ensures that their security posture is uniform (publicly readable, administratively writable), making rules simple (`allow read: if true;`). This directly supports QAPs as any user can list all available exams, subjects, topics, and questions without filtering issues.\n\n2.  **Private User Data (`UserConfiguration`, `TestConfiguration`, `UserTest`, `UserAnswer`, `TestResult`, `QuestionResult`, `ImprovementTip`):** All data related to a specific user's settings, test attempts, results, and personalized feedback are stored under a dedicated `/users/{userId}/` hierarchy. This provides a clear path-based ownership model. For example, `/users/{userId}/testConfigurations` allows a user to query and manage *only their own* test configurations. Security rules can efficiently enforce `request.auth.uid == userId` for all operations (read, write, update, delete) on these paths. This approach inherently supports secure `list` operations (QAPs), as `list` queries on these collections will automatically be scoped to the authenticated user's data due to the rule's path binding. For instance, `firebase.firestore().collection('users').doc(uid).collection('testResults').get()` will only return the current user's results, as enforced by the rules.\n\nBy following these strategies, the Firestore structure is highly secure, scalable, and debuggable. Authorization rules will be concise and robust, operating primarily on `request.auth.uid` and path parameters, or explicitly denormalized ownership fields, thus eliminating complex `get()` calls within rules."
+  }
+}

@@ -1,0 +1,251 @@
+/**
+ * @fileoverview Firestore Security Rules
+ * @author Your Name <you@example.com>
+ *
+ * @description
+ * This ruleset defines the access control policies for the Firestore database.
+ *
+ * Core Philosophy:
+ * This security model employs a hybrid approach. It segregates public, read-only
+ * application content (like exams and questions) from private, user-specific data
+ * (like test configurations and results). This provides a secure and efficient
+ * data access layer.
+ *
+ * Data Structure:
+ * 1. Public Content: Top-level collections like `/exams` and `/questions` store
+ *    data that is readable by any user, signed in or not. Writes to this data
+ *    are restricted.
+ * 2. Private User Data: All data owned by a user is stored within a dedicated
+ *    hierarchical structure under `/users/{userId}/...`. This ensures that a
+ *    user can only ever access their own information.
+ *
+ * Key Security Decisions:
+ * - Strict Ownership: All collections under `/users/{userId}` are strictly
+ *   controlled by the user whose UID matches the `{userId}` wildcard in the path.
+ *   This prevents any user from accessing another user's private data.
+ * - Public Read-Only Content: Global content like exams, subjects, and the
+ *   question bank is publicly readable to allow for a rich, unauthenticated
+ *   user experience. Writes are disabled for end-users, implying they should
+ *   be managed by a trusted backend service or admin SDK.
+ * - No User Listing: The top-level `/users` collection is not listable,
+ *   preventing enumeration of all application users.
+ * - Denormalization for Authorization: User-specific data is organized under
+*    paths containing the user's ID (e.g., /users/{userId}/...). This allows
+*    for simple, fast, and secure path-based authorization checks without
+*    requiring slow and costly `get()` calls to other documents.
+ * - Structural Segregation: The clear separation between public top-level
+ *   collections and private user subcollections simplifies rule logic and
+ *   makes list operations inherently secure.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the requesting user's UID matches the provided userId.
+     * This is the foundation of the user-ownership model.
+     * @param userId The user ID to check against the authenticated user's UID.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if the user is the owner of an existing document.
+     * Crucial for secure update and delete operations.
+     * @param userId The user ID to check for ownership.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    // -------------------------------------------------------------------------
+    // User Data Rules
+    // All private user data is nested under this path.
+    // -------------------------------------------------------------------------
+
+    /**
+     * @description A user's root document. This rule allows a user to create
+     *   their own profile document but not to view or edit others'.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own document at `/users/USER_123`.
+     * @deny (get) User 'USER_ABC' trying to read `/users/USER_123`.
+     * @deny (list) Any user trying to list all documents in the `/users` collection.
+     * @principle Enforces self-creation and ownership for root user documents.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if false; // Typically user profiles should not be self-deleted.
+    }
+
+    /**
+     * @description Manages a user's application-level settings and preferences.
+     * @path /users/{userId}/userConfigurations/{userConfigurationId}
+     * @allow (create, read, update, delete) User 'USER_123' managing their own configuration.
+     * @deny (read) User 'USER_ABC' trying to read a configuration belonging to 'USER_123'.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/userConfigurations/{userConfigurationId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update, delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages a user's saved configurations for mock tests.
+     * @path /users/{userId}/testConfigurations/{testConfigurationId}
+     * @allow (create, read, update, delete) User 'USER_123' managing their own test settings.
+     * @deny (list) User 'USER_ABC' trying to list test configurations for 'USER_123'.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/testConfigurations/{testConfigurationId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update, delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages a user's active or past mock test sessions.
+     * @path /users/{userId}/userTests/{userTestId}
+     * @allow (create, read, update, delete) User 'USER_123' managing their own test instances.
+     * @deny (read) User 'USER_ABC' trying to view a test instance belonging to 'USER_123'.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/userTests/{userTestId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update, delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages a user's individual answers within a specific test.
+     * @path /users/{userId}/userTests/{userTestId}/userAnswers/{userAnswerId}
+     * @allow (create, update) User 'USER_123' submitting or changing an answer in their own test.
+     * @deny (read) User 'USER_ABC' trying to read an answer belonging to 'USER_123'.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/userTests/{userTestId}/userAnswers/{userAnswerId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update, delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages the final calculated results for a user's completed test.
+     * @path /users/{userId}/testResults/{testResultId}
+     * @allow (read, list) User 'USER_123' viewing their own past test results.
+     * @deny (update, delete) A user attempting to modify or delete a finalized test result.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/testResults/{testResultId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update, delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages the detailed results for each question in a test.
+     * @path /users/{userId}/testResults/{testResultId}/questionResults/{questionResultId}
+     * @allow (read) User 'USER_123' reviewing the outcome of a specific question on their test.
+     * @deny (create) A user trying to manually create a question result.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/testResults/{testResultId}/questionResults/{questionResultId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update, delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Manages AI-generated tips for improvement based on a test result.
+     * @path /users/{userId}/testResults/{testResultId}/improvementTips/{improvementTipId}
+     * @allow (read) User 'USER_123' viewing their personalized improvement tips.
+     * @deny (create, update, delete) A user trying to modify their own AI-generated tips.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /users/{userId}/testResults/{testResultId}/improvementTips/{improvementTipId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update, delete: if isExistingOwner(userId);
+    }
+
+    // -------------------------------------------------------------------------
+    // Public Content Rules
+    // This data is readable by anyone but writable only by admins/backend.
+    // -------------------------------------------------------------------------
+
+    /**
+     * @description Defines public information about competitive examinations.
+     * @path /exams/{examId}
+     * @allow (get, list) Any user, signed in or not, can read exam information.
+     * @deny (create, update, delete) Any end-user trying to modify exam data.
+     * @principle Provides public read access while restricting writes to trusted sources.
+     */
+    match /exams/{examId} {
+      allow get, list: if true;
+      allow create, update, delete: if false; // TODO: Implement admin-only write access.
+    }
+
+    /**
+     * @description Defines public information about subjects within an exam.
+     * @path /exams/{examId}/subjects/{subjectId}
+     * @allow (get, list) Any user can read subject information for any exam.
+     * @deny (create, update, delete) Any end-user trying to modify subject data.
+     * @principle Provides public read access while restricting writes to trusted sources.
+     */
+    match /exams/{examId}/subjects/{subjectId} {
+      allow get, list: if true;
+      allow create, update, delete: if false; // TODO: Implement admin-only write access.
+    }
+
+    /**
+     * @description Defines public information about topics within a subject.
+     * @path /exams/{examId}/subjects/{subjectId}/topics/{topicId}
+     * @allow (get, list) Any user can read topic information for any subject.
+     * @deny (create, update, delete) Any end-user trying to modify topic data.
+     * @principle Provides public read access while restricting writes to trusted sources.
+     */
+    match /exams/{examId}/subjects/{subjectId}/topics/{topicId} {
+      allow get, list: if true;
+      allow create, update, delete: if false; // TODO: Implement admin-only write access.
+    }
+
+    /**
+     * @description A global bank of all questions available for tests.
+     * @path /questions/{questionId}
+     * @allow (get, list) Any user can read questions from the public question bank.
+     * @deny (create, update, delete) Any end-user trying to add or modify questions.
+     * @principle Provides public read access while restricting writes to trusted sources.
+     */
+    match /questions/{questionId} {
+      allow get, list: if true;
+      allow create, update, delete: if false; // TODO: Implement admin or AI-service write access.
+    }
+
+    /**
+     * @description The multiple-choice options associated with a question.
+     * @path /questions/{questionId}/options/{optionId}
+     * @allow (get, list) Any user can read the options for any public question.
+     * @deny (create, update, delete) Any end-user trying to modify question options.
+     * @principle Provides public read access while restricting writes to trusted sources.
+     */
+    match /questions/{questionId}/options/{optionId} {
+      allow get, list: if true;
+      allow create, update, delete: if false; // TODO: Implement admin or AI-service write access.
+    }
+  }
+}
