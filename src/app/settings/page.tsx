@@ -9,17 +9,15 @@ import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import type { AIProvider } from "@/lib/types";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from "lucide-react";
 
+// Schema only manages the provider selection now.
 const settingsSchema = z.object({
   activeProvider: z.enum(["gemini", "claude", "openai", "deepseek"]),
-  geminiApiKey: z.string().optional(),
-  claudeApiKey: z.string().optional(),
-  openaiApiKey: z.string().optional(),
-  deepseekApiKey: z.string().optional(),
 });
 
 const PROVIDERS: { id: AIProvider, name: string }[] = [
@@ -40,9 +38,11 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
+    // Only loading the provider setting.
     const savedSettings = localStorage.getItem("ai_settings");
     if (savedSettings) {
-      form.reset(JSON.parse(savedSettings));
+      const parsedSettings = JSON.parse(savedSettings);
+      form.reset({ activeProvider: parsedSettings.activeProvider });
     }
     setIsMounted(true);
   }, [form]);
@@ -52,22 +52,23 @@ export default function SettingsPage() {
   }
 
   function onSubmit(values: z.infer<typeof settingsSchema>) {
+    // Only saving the provider setting.
     localStorage.setItem("ai_settings", JSON.stringify(values));
     toast({
       title: "Settings Saved",
-      description: "Your AI provider settings have been updated.",
+      description: "Your AI provider preference has been updated.",
     });
   }
 
   return (
-    <div className="container mx-auto max-w-2xl py-12">
+    <div className="container mx-auto max-w-2xl py-12 space-y-8">
       <Card>
         <CardHeader>
           <CardTitle className="font-headline">AI Provider Settings</CardTitle>
           <CardDescription>
-            Configure your preferred AI provider for generating tests. Keys are stored locally in your browser.
+            Select your preferred AI provider for generating tests.
             <br />
-            <span className="text-destructive font-medium">Note: Only Google Gemini is currently supported for backend operations.</span>
+            <span className="text-destructive font-medium">Note: Only Google Gemini is currently supported for backend operations. Other providers are for future use.</span>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -105,30 +106,23 @@ export default function SettingsPage() {
                 )}
               />
               
-              <div className="space-y-4">
-                 {PROVIDERS.map(provider => (
-                  <FormField
-                    key={provider.id}
-                    control={form.control}
-                    name={`${provider.id}ApiKey` as keyof z.infer<typeof settingsSchema>}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{provider.name} API Key</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder={`Enter your ${provider.name} API Key`} {...field} value={field.value ?? ''} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                 ))}
-              </div>
-
-              <Button type="submit">Save Settings</Button>
+              <Button type="submit">Save Preference</Button>
             </form>
           </Form>
         </CardContent>
       </Card>
+      
+      <Alert>
+        <Terminal className="h-4 w-4" />
+        <AlertTitle>Server API Key Configuration</AlertTitle>
+        <AlertDescription>
+          For AI features to work, you must provide an API key for the server. 
+          Create a file named <strong>.env</strong> in the project's root directory and add your Google Gemini API key:
+          <pre className="mt-2 rounded-md bg-muted p-2 text-sm">
+            GEMINI_API_KEY=YOUR_API_KEY_HERE
+          </pre>
+        </AlertDescription>
+      </Alert>
     </div>
   );
 }
