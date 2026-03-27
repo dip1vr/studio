@@ -67,10 +67,10 @@ Specifically, cover the topic: "{{topic}}".
     {{/if}}
 
 Your final output **MUST** be a JSON array of question objects. Each object must have:
-- A 'questionText' field with the question itself.
-- An 'options' field which is an array of exactly four distinct answer choices.
-- A 'correctAnswerIndex' field, which is the 0-indexed number (0, 1, 2, or 3) corresponding to the correct answer in the 'options' array.
-- An 'explanation' field providing a detailed, step-by-step reason for why the correct answer is right.
+- 'questionText': The question itself.
+- 'options': An array of exactly four distinct answer choices.
+- 'correctAnswerIndex': The 0-indexed number (0, 1, 2, or 3) corresponding to the correct answer in the 'options' array.
+- 'explanation': Provide a detailed, step-by-step explanation in simple, easy-to-understand language. First, explain the conventional method. Then, if a faster method exists, add a section titled "**Short Trick:**" and explain the shortcut. Ensure all mathematical expressions are in LaTeX format.
 
 Ensure the questions are relevant, clear, and unambiguous.
 `;

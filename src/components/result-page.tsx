@@ -10,9 +10,13 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { CheckCircle, XCircle, AlertCircle, Clock, BarChart2, Lightbulb } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 import type { TestResult, TestSession } from '@/lib/types';
 import { offerPersonalizedStudySuggestions } from '@/ai/flows/offer-personalized-study-suggestions';
+import { useToast } from '@/hooks/use-toast';
 
 const COLORS = {
   correct: 'hsl(var(--chart-2))',
@@ -24,6 +28,7 @@ export function ResultPageClient({ resultId }: { resultId: string }) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
 
   const resultRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -248,7 +253,13 @@ export function ResultPageClient({ resultId }: { resultId: string }) {
                     </div>
                     <Card className="bg-muted/50">
                         <CardHeader><CardTitle className="text-lg">Explanation</CardTitle></CardHeader>
-                        <CardContent><p>{q.explanation}</p></CardContent>
+                        <CardContent>
+                            <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                                    {q.explanation}
+                                </ReactMarkdown>
+                            </div>
+                        </CardContent>
                     </Card>
                   </AccordionContent>
                 </AccordionItem>

@@ -3,6 +3,7 @@ import './globals.css';
 import { AppProviders } from './providers';
 import { SiteHeader } from '@/components/site-header';
 import { Toaster } from '@/components/ui/toaster';
+import 'katex/dist/katex.min.css';
 
 export const metadata: Metadata = {
   title: 'Vidyarthi Vista',
