@@ -37,7 +37,43 @@ const GenerateMockExamQuestionsOutputSchema = z.array(QuestionOutputSchema).desc
 export type GenerateMockExamQuestionsOutput = z.infer<typeof GenerateMockExamQuestionsOutputSchema>;
 
 // Prompt template string
-const promptTemplate = `You are an expert at creating multiple-choice questions for Indian Government Exams.\nYour task is to generate {{numberOfQuestions}} unique multiple-choice questions (MCQs) in {{language}} for the "{{exam}}" exam.\n\n{{#if subject}}\nFocus on the subject: "{{subject}}".\n{{/if}}\n\n{{#if topic}}\nSpecifically, cover the topic: "{{topic}}".\n{{/if}}\n\nThe difficulty level should be "{{difficulty}}".\n\nEach question must have:\n- A 'questionText' field with the question itself.\n- An 'options' field which is an array of exactly four distinct answer choices (A, B, C, D).\n- A 'correctAnswerIndex' field, which is the 0-indexed number (0, 1, 2, or 3) corresponding to the correct answer in the 'options' array.\n- An 'explanation' field providing a detailed reason for the correct answer.\n\nEnsure the questions are relevant to the specified exam, subject, and topic.\nAvoid ambiguity in questions and options.\nGenerate the output as a JSON array of question objects, strictly following the schema.\n`;
+const promptTemplate = `You are an expert at creating multiple-choice questions for Indian Government Exams. Your primary goal is accuracy and factual correctness.
+
+Your task is to generate {{numberOfQuestions}} unique multiple-choice questions (MCQs) in {{language}} for the "{{exam}}" exam.
+
+The difficulty level should be "{{difficulty}}".
+
+{{#if subject}}
+Focus on the subject: "{{subject}}".
+{{/if}}
+{{#if topic}}
+Specifically, cover the topic: "{{topic}}".
+{{/if}}
+
+**VERY IMPORTANT INSTRUCTIONS FOR ACCURACY:**
+
+1.  **Chain of Thought Process:** Before creating the options, first, think step-by-step to formulate the question text and determine the single, unambiguously correct answer and a detailed explanation. Only after this internal verification should you create the multiple-choice options. Ensure one option is 100% correct and the others are plausible but incorrect distractors.
+
+2.  **Subject-Specific Rules:**
+    {{#if subject}}
+    When the subject is "Quantitative Aptitude" or "Mathematics":
+    - Use LaTeX format for all mathematical formulas and expressions (e.g., '\\(x^2 + y^2 = r^2\\)'). Solve the question yourself step-by-step to ensure the correct answer is generated accurately before creating the options.
+
+    When the subject is "English Language & Comprehension" or "English":
+    - Strictly adhere to established grammar rules, like those found in Wren & Martin. Avoid using ambiguous synonyms or idioms in a way that could have multiple interpretations.
+
+    When the subject is "General Intelligence & Reasoning" or "Reasoning":
+    - Double-check the logic of any patterns (e.g., in number or letter series). The logic must be consistent and not open to interpretation. Verify your own logic before finalizing the question.
+    {{/if}}
+
+Your final output **MUST** be a JSON array of question objects. Each object must have:
+- A 'questionText' field with the question itself.
+- An 'options' field which is an array of exactly four distinct answer choices.
+- A 'correctAnswerIndex' field, which is the 0-indexed number (0, 1, 2, or 3) corresponding to the correct answer in the 'options' array.
+- An 'explanation' field providing a detailed, step-by-step reason for why the correct answer is right.
+
+Ensure the questions are relevant, clear, and unambiguous.
+`;
 
 // Flow definition
 const generateMockExamQuestionsFlow = ai.defineFlow(
@@ -63,6 +99,9 @@ const generateMockExamQuestionsFlow = ai.defineFlow(
         input: {schema: GenerateMockExamQuestionsInputSchema},
         output: {schema: GenerateMockExamQuestionsOutputSchema},
         prompt: promptTemplate,
+        config: {
+          temperature: 0.3,
+        },
     });
 
     const {output} = await userPrompt(input);
