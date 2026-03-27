@@ -57,7 +57,8 @@ Specifically, cover the topic: "{{topic}}".
 2.  **Subject-Specific Rules:**
     {{#if subject}}
     When the subject is "Quantitative Aptitude" or "Mathematics":
-    - Use LaTeX format for all mathematical formulas and expressions (e.g., '\\(x^2 + y^2 = r^2\\)'). Solve the question yourself step-by-step to ensure the correct answer is generated accurately before creating the options.
+    - **CRITICAL FOR RENDERING:** Wrap all mathematical formulas and expressions in single dollar signs for inline math (e.g., $x^2 + y^2 = r^2$) and double dollar signs for block-level math. For example: $$ \\frac{a}{b} $$. This is absolutely essential for the formulas to display correctly.
+    - Solve the question yourself step-by-step to ensure the correct answer is generated accurately before creating the options.
 
     When the subject is "English Language & Comprehension" or "English":
     - Strictly adhere to established grammar rules, like those found in Wren & Martin. Avoid using ambiguous synonyms or idioms in a way that could have multiple interpretations.
@@ -67,10 +68,10 @@ Specifically, cover the topic: "{{topic}}".
     {{/if}}
 
 Your final output **MUST** be a JSON array of question objects. Each object must have:
-- 'questionText': The question itself.
+- 'questionText': The question itself. Ensure all math expressions are wrapped in dollar signs ($...$ or $$...$$).
 - 'options': An array of exactly four distinct answer choices.
 - 'correctAnswerIndex': The 0-indexed number (0, 1, 2, or 3) corresponding to the correct answer in the 'options' array.
-- 'explanation': Provide a detailed, step-by-step explanation in simple, easy-to-understand language. First, explain the conventional method. Then, if a faster method exists, add a section titled "**Short Trick:**" and explain the shortcut. Ensure all mathematical expressions are in LaTeX format.
+- 'explanation': Provide a detailed, step-by-step explanation in simple, easy-to-understand language. First, explain the conventional method. Then, if a faster method exists, add a section titled "**Short Trick:**" and explain the shortcut. **Ensure all mathematical expressions are in LaTeX format and correctly wrapped in dollar signs ($...$ for inline and $$...$$ for block) for proper rendering.**
 
 Ensure the questions are relevant, clear, and unambiguous.
 `;
