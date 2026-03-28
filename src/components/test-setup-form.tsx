@@ -39,14 +39,14 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { DIFFICULTIES, EXAMS, LANGUAGES, SUBJECTS, TOPICS } from "@/lib/constants";
 import { generateMockExamQuestions } from "@/ai/flows/generate-mock-exam-questions";
-import { Loader2, Minus, Plus, ArrowRight, Hash, Clock, TrendingUp, BookOpen, FileText, Languages, Target, Cog, Info } from "lucide-react";
+import { Loader2, Minus, Plus, ArrowRight, Hash, Clock, TrendingUp, BookOpen, FileText, Languages, Target, Info } from "lucide-react";
 import type { TestSession, UserConfiguration } from "@/lib/types";
 import { useDoc, useUser, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Textarea } from "./ui/textarea";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Separator } from "./ui/separator";
 
 const formSchema = z.object({
   exam: z.string({ required_error: "Please select an exam." }),
@@ -66,8 +66,14 @@ const formSchema = z.object({
 
 const difficultyMapping = ['Easy', 'Medium', 'Hard', 'Mixed'] as const;
 
-const GlassCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div className={cn("bg-card/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 shadow-lg", className)}>
+const GlassCard = ({ children, className, delay = 0 }: { children: React.ReactNode; className?: string, delay?: number }) => (
+    <div
+      className={cn(
+        'bg-card/50 backdrop-blur-sm border border-white/10 rounded-2xl p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:border-primary/20 hover:-translate-y-1 animate-in fade-in-0 slide-in-from-bottom-8 duration-700 ease-out',
+        className
+      )}
+      style={{ animationDelay: `${delay}ms` }}
+    >
         {children}
     </div>
 );
@@ -203,10 +209,10 @@ export function TestSetupForm() {
   
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         
-        <GlassCard>
-            <div className="grid md:grid-cols-2 gap-6">
+        <GlassCard delay={100}>
+            <div className="grid md:grid-cols-2 gap-8">
                 <FormField
                     control={form.control}
                     name="exam"
@@ -329,58 +335,58 @@ export function TestSetupForm() {
             </div>
         </GlassCard>
 
-        <GlassCard>
-            <FormField
-                control={form.control}
-                name="timeLimit"
-                render={({ field }) => (
-                    <FormItem>
-                        <div className="flex justify-between items-center mb-2">
-                            <FormLabel className="flex items-center gap-2 text-lg"><Clock className="w-6 h-6 text-primary"/>Time Duration</FormLabel>
-                            <span className="text-xl font-bold text-primary">{field.value}m</span>
-                        </div>
-                        <FormControl>
-                             <Slider
-                                min={10} max={120} step={5}
-                                defaultValue={[field.value || 60]}
-                                onValueChange={(vals) => field.onChange(vals[0])}
-                            />
-                        </FormControl>
-                        <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                            <span>10m</span>
-                            <span>120m</span>
-                        </div>
-                    </FormItem>
-                )}
-            />
-        </GlassCard>
-
-        <GlassCard>
-            <FormField
-                control={form.control}
-                name="difficulty"
-                render={({ field }) => (
-                    <FormItem>
-                        <div className="flex justify-between items-center mb-2">
-                            <FormLabel className="flex items-center gap-2 text-lg"><TrendingUp className="w-6 h-6 text-primary"/>Difficulty Level</FormLabel>
-                             <span className="inline-block px-3 py-1 text-sm font-semibold text-red-800 bg-red-200 rounded-full dark:bg-red-900 dark:text-red-300">{field.value}</span>
-                        </div>
-                        <FormControl>
-                             <Slider
-                                min={0} max={difficultyMapping.length - 1} step={1}
-                                defaultValue={[difficultyMapping.indexOf(field.value)]}
-                                onValueChange={(vals) => field.onChange(difficultyMapping[vals[0]])}
-                            />
-                        </FormControl>
-                        <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                            {difficultyMapping.map(d => <span key={d}>{d}</span>)}
-                        </div>
-                    </FormItem>
-                )}
-            />
+        <GlassCard delay={200}>
+            <div className="space-y-8">
+                <FormField
+                    control={form.control}
+                    name="timeLimit"
+                    render={({ field }) => (
+                        <FormItem>
+                            <div className="flex justify-between items-center mb-2">
+                                <FormLabel className="flex items-center gap-2 text-lg"><Clock className="w-6 h-6 text-primary"/>Time Duration</FormLabel>
+                                <span className="text-xl font-bold text-primary">{field.value}m</span>
+                            </div>
+                            <FormControl>
+                                <Slider
+                                    min={10} max={120} step={5}
+                                    defaultValue={[field.value || 60]}
+                                    onValueChange={(vals) => field.onChange(vals[0])}
+                                />
+                            </FormControl>
+                            <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                                <span>10m</span>
+                                <span>120m</span>
+                            </div>
+                        </FormItem>
+                    )}
+                />
+                <Separator className="bg-white/10" />
+                 <FormField
+                    control={form.control}
+                    name="difficulty"
+                    render={({ field }) => (
+                        <FormItem>
+                            <div className="flex justify-between items-center mb-2">
+                                <FormLabel className="flex items-center gap-2 text-lg"><TrendingUp className="w-6 h-6 text-primary"/>Difficulty Level</FormLabel>
+                                <span className="inline-block px-3 py-1 text-sm font-semibold text-red-800 bg-red-200 rounded-full dark:bg-red-900 dark:text-red-300">{field.value}</span>
+                            </div>
+                            <FormControl>
+                                <Slider
+                                    min={0} max={difficultyMapping.length - 1} step={1}
+                                    defaultValue={[difficultyMapping.indexOf(field.value)]}
+                                    onValueChange={(vals) => field.onChange(difficultyMapping[vals[0]])}
+                                />
+                            </FormControl>
+                            <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                                {difficultyMapping.map(d => <span key={d}>{d}</span>)}
+                            </div>
+                        </FormItem>
+                    )}
+                />
+            </div>
         </GlassCard>
         
-        <GlassCard>
+        <GlassCard delay={300}>
              <FormField
                 control={form.control}
                 name="numberOfQuestions"
@@ -401,7 +407,7 @@ export function TestSetupForm() {
             />
         </GlassCard>
 
-        <GlassCard>
+        <GlassCard delay={400}>
              <FormField
                 control={form.control}
                 name="suggestion"
@@ -421,7 +427,7 @@ export function TestSetupForm() {
             />
         </GlassCard>
 
-        <GlassCard>
+        <GlassCard delay={500}>
             <div className="grid md:grid-cols-2 gap-6 items-center">
                 <FormField
                 control={form.control}
@@ -437,24 +443,26 @@ export function TestSetupForm() {
                 )}
                 />
                 {watchAllFields.negativeMarking && (
-                    <FormField
-                    control={form.control}
-                    name="negativeMarkingRatio"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel className="text-sm">Ratio</FormLabel>
-                        <FormControl>
-                            <Input type="number" step="0.01" placeholder="e.g., 0.25" {...field} value={field.value ?? ''} className="bg-background/70" />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
+                    <div className="animate-in fade-in duration-500">
+                        <FormField
+                        control={form.control}
+                        name="negativeMarkingRatio"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel className="text-sm">Ratio</FormLabel>
+                            <FormControl>
+                                <Input type="number" step="0.01" placeholder="e.g., 0.25" {...field} value={field.value ?? ''} className="bg-background/70" />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
                 )}
             </div>
         </GlassCard>
 
-        <GlassCard className="!bg-primary/90 text-primary-foreground">
+        <GlassCard delay={600} className="!bg-primary/90 text-primary-foreground">
             <h3 className="text-lg font-bold text-center mb-4">Test Summary</h3>
             <div className="flex justify-around items-center text-center">
                 <div>
@@ -472,11 +480,13 @@ export function TestSetupForm() {
             </div>
         </GlassCard>
         
-        <Button type="submit" size="lg" disabled={isPending} className="w-full text-lg h-14 rounded-full shadow-lg shadow-primary/30 transition-transform duration-300 hover:scale-105">
-            {isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-            {isPending ? 'Generating Test...' : 'Start Mock Test'}
-            {!isPending && <ArrowRight className="ml-2 h-5 w-5" />}
-        </Button>
+        <div className="pt-2 animate-in fade-in-0 slide-in-from-bottom-8 duration-700 ease-out" style={{ animationDelay: '700ms' }}>
+            <Button type="submit" size="lg" disabled={isPending} className="w-full text-lg h-14 rounded-full shadow-lg shadow-primary/30 transition-transform duration-300 hover:scale-105">
+                {isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                {isPending ? 'Generating Test...' : 'Start Mock Test'}
+                {!isPending && <ArrowRight className="ml-2 h-5 w-5" />}
+            </Button>
+        </div>
       </form>
     </Form>
   );
