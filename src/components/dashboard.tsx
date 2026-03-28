@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo } from 'react';
@@ -70,7 +71,7 @@ export function Dashboard() {
 
     const resultsQuery = useMemoFirebase(() => {
         if (!user) return null;
-        return query(collection(firestore, `users/${user.uid}/testResults`), orderBy('date', 'desc'));
+        return query(collection(firestore, `users/${user.uid}/testResults`), orderBy('takenAt', 'desc'));
     }, [user, firestore]);
     
     const { data: results, isLoading } = useCollection<TestResult>(resultsQuery);
@@ -98,7 +99,7 @@ export function Dashboard() {
 
         return last7Days.map(day => {
             const testsOnDay = results.filter(result => 
-                isWithinInterval(new Date(result.date), { start: startOfDay(day), end: endOfDay(day) })
+                isWithinInterval(new Date(result.takenAt), { start: startOfDay(day), end: endOfDay(day) })
             ).length;
             return {
                 name: format(day, 'E'),
@@ -193,7 +194,7 @@ export function Dashboard() {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-lg font-bold text-green-400">{test.accuracy.toFixed(0)}%</p>
-                                            <p className="text-xs text-slate-500">{format(new Date(test.date), 'MMM d, yyyy')}</p>
+                                            <p className="text-xs text-slate-500">{format(new Date(test.takenAt), 'MMM d, yyyy')}</p>
                                         </div>
                                     </Card>
                                 </Link>

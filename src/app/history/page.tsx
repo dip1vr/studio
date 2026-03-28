@@ -19,7 +19,7 @@ export default function HistoryPage() {
 
   const historyQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return query(collection(firestore, `users/${user.uid}/testResults`), orderBy('date', 'desc'));
+    return query(collection(firestore, `users/${user.uid}/testResults`), orderBy('takenAt', 'desc'));
   }, [user, firestore]);
 
   const { data: history, isLoading } = useCollection<TestResult>(historyQuery);
@@ -27,7 +27,7 @@ export default function HistoryPage() {
   const chartData = useMemo(() => {
     if (!history) return [];
     return history.slice(0, 10).reverse().map(result => ({
-        name: format(new Date(result.date), 'MMM d'),
+        name: format(new Date(result.takenAt), 'MMM d'),
         score: result.score,
         accuracy: result.accuracy,
     }));
@@ -133,7 +133,7 @@ export default function HistoryPage() {
                 {history.map(result => (
                     <TableRow key={result.id}>
                     <TableCell className="font-medium">{result.config.exam}</TableCell>
-                    <TableCell>{format(new Date(result.date), 'PPP')}</TableCell>
+                    <TableCell>{format(new Date(result.takenAt), 'PPP')}</TableCell>
                     <TableCell className="text-right">{result.score.toFixed(2)} / {result.totalQuestions}</TableCell>
                     <TableCell className="text-right">{result.accuracy.toFixed(2)}%</TableCell>
                     <TableCell className="text-right">

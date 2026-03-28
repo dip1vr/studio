@@ -185,7 +185,7 @@ export function TestInterface({ testId }: { testId: string }) {
             correctAnswers,
             incorrectAnswers,
             skipped,
-            date: new Date(session.startTime).toISOString(),
+            takenAt: new Date(session.startTime).toISOString(),
             timeTaken: Math.floor((endTime - session.startTime) / 1000),
             performanceBreakdown,
         };

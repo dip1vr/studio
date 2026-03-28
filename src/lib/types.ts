@@ -63,7 +63,7 @@ export type TestResult = {
   correctAnswers: number;
   incorrectAnswers: number;
   skipped: number;
-  date: string;
+  takenAt: string;
   timeTaken: number; // in seconds
   performanceBreakdown?: PerformanceBreakdown[];
 };

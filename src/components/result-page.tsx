@@ -131,7 +131,7 @@ export function ResultPageClient({ resultId }: { resultId: string }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl font-headline">Test Report: {result.config.exam}</CardTitle>
-          <CardDescription>Analysis of your performance on {new Date(result.date).toLocaleString()}</CardDescription>
+          <CardDescription>Analysis of your performance on {new Date(result.takenAt).toLocaleString()}</CardDescription>
         </CardHeader>
         <CardContent className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
