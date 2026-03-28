@@ -50,7 +50,7 @@ import { cn } from "@/lib/utils";
 const formSchema = z.object({
   exam: z.string({ required_error: "Please select an exam." }),
   subjects: z.array(z.string()).optional(),
-  topics: z.array(z.string()).optional(),
+  topic: z.string().optional(),
   numberOfQuestions: z.number().min(5).max(100),
   difficulty: z.enum(DIFFICULTIES),
   language: z.enum(LANGUAGES),
@@ -84,7 +84,7 @@ export function TestSetupForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       subjects: [],
-      topics: [],
+      topic: undefined,
       numberOfQuestions: 10,
       difficulty: "Medium",
       language: "English",
@@ -117,14 +117,13 @@ export function TestSetupForm() {
     if (examValue && subjectsValue && subjectsValue.length === 1) {
         const availableTopics = TOPICS[examValue]?.[subjectsValue[0]] || [];
         setTopics(availableTopics);
-        const currentTopics = form.getValues('topics') || [];
-        const validTopics = currentTopics.filter(t => availableTopics.includes(t));
-        if(validTopics.length !== currentTopics.length) {
-            form.setValue('topics', validTopics);
+        const currentTopic = form.getValues('topic');
+        if (currentTopic && !availableTopics.includes(currentTopic)) {
+            form.setValue('topic', undefined);
         }
     } else {
         setTopics([]);
-        form.setValue('topics', []);
+        form.setValue('topic', undefined);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examValue, subjectsValue]);
@@ -146,7 +145,7 @@ export function TestSetupForm() {
         const questions = await generateMockExamQuestions({
           exam: values.exam,
           subjects: values.subjects && values.subjects.length > 0 ? values.subjects : undefined,
-          topics: values.topics && values.topics.length > 0 ? values.topics : undefined,
+          topic: values.topic,
           numberOfQuestions: values.numberOfQuestions,
           difficulty: values.difficulty,
           language: values.language,
@@ -272,58 +271,30 @@ export function TestSetupForm() {
             />
              <FormField
               control={form.control}
-              name="topics"
+              name="topic"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Topics</FormLabel>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <FormControl>
-                        <Button
-                           variant="outline"
-                           className={cn(
-                            "w-full justify-start text-left font-normal h-auto min-h-10 py-2",
-                            !field.value?.length && "text-muted-foreground"
-                          )}
-                          disabled={topics.length === 0}
-                        >
-                          {field.value?.length > 0 ? (
-                             <div className="flex gap-2 flex-wrap">
-                                {field.value.map(val => (
-                                    <div key={val} className="truncate rounded-md bg-secondary text-secondary-foreground px-2 py-1 text-xs">
-                                        {val}
-                                    </div>
-                                ))}
-                             </div>
-                          ) : (
-                            "Select topics"
-                          )}
-                        </Button>
-                      </FormControl>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" align="start">
-                        <DropdownMenuLabel>Available Topics</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                         <ScrollArea className="h-48">
-                            {topics.map(topic => (
-                                <DropdownMenuCheckboxItem
-                                key={topic}
-                                checked={field.value?.includes(topic)}
-                                onCheckedChange={(checked) => {
-                                    const selected = field.value || [];
-                                    return checked
-                                    ? field.onChange([...selected, topic])
-                                    : field.onChange(selected.filter(s => s !== topic));
-                                }}
-                                >
-                                {topic}
-                                </DropdownMenuCheckboxItem>
-                            ))}
-                        </ScrollArea>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                   <FormDescription>
-                    Topics are only available when one subject is selected.
+                  <FormLabel>Topic (Optional)</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={topics.length === 0}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a topic to focus on" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {topics.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Select a single subject to enable topic-specific questions.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

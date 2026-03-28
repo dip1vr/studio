@@ -11,7 +11,7 @@ export type AIProviderSettings = {
 export type ExamConfig = {
   exam: string;
   subjects?: string[];
-  topics?: string[];
+  topic?: string;
   numberOfQuestions: number;
   difficulty: 'Easy' | 'Medium' | 'Hard' | 'Mixed';
   language: 'English' | 'Hindi' | 'Bilingual';
