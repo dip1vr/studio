@@ -3,6 +3,7 @@
 import { useUser, useAuth } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
     const { user, isUserLoading } = useUser();
@@ -14,8 +15,19 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         }
     }, [isUserLoading, user, auth]);
 
-    // The loading skeleton has been moved to the page level (e.g., src/app/page.tsx)
-    // to prevent hydration errors. This component's only job is to ensure
-    // an anonymous user is created if no user is logged in.
+    if (isUserLoading) {
+        return (
+            <div className="w-full h-screen flex items-center justify-center bg-background">
+                <div className="flex flex-col items-center gap-4">
+                    <h2 className="text-xl font-semibold">Vidyarthi Vista</h2>
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-[250px]" />
+                        <Skeleton className="h-4 w-[200px]" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return <>{children}</>;
 }
