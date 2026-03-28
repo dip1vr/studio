@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
@@ -71,10 +71,22 @@ export function Dashboard() {
 
     const resultsQuery = useMemoFirebase(() => {
         if (!user) return null;
-        return query(collection(firestore, `users/${user.uid}/testResults`), orderBy('takenAt', 'desc'));
+        // Fetch all results without ordering to handle legacy data and avoid indexing issues.
+        return query(collection(firestore, `users/${user.uid}/testResults`));
     }, [user, firestore]);
     
-    const { data: results, isLoading } = useCollection<TestResult>(resultsQuery);
+    const { data: rawResults, isLoading } = useCollection<TestResult | (Omit<TestResult, 'takenAt'> & { date: string })>(resultsQuery);
+
+    const results = useMemo(() => {
+        if (!rawResults) return null;
+        return rawResults
+            .map(r => ({
+                ...r,
+                takenAt: (r as TestResult).takenAt || (r as any).date || new Date(0).toISOString(),
+            }))
+            .sort((a, b) => new Date(b.takenAt).getTime() - new Date(a.takenAt).getTime());
+    }, [rawResults]);
+
 
     const stats = useMemo(() => {
         if (!results || results.length === 0) {

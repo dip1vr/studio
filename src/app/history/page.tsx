@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 import { useCollection, useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -19,10 +19,22 @@ export default function HistoryPage() {
 
   const historyQuery = useMemoFirebase(() => {
     if (!user || !firestore) return null;
-    return query(collection(firestore, `users/${user.uid}/testResults`), orderBy('takenAt', 'desc'));
+    // Remove orderBy to handle legacy 'date' field and avoid indexing issues
+    return query(collection(firestore, `users/${user.uid}/testResults`));
   }, [user, firestore]);
 
-  const { data: history, isLoading } = useCollection<TestResult>(historyQuery);
+  const { data: rawHistory, isLoading } = useCollection<TestResult | (Omit<TestResult, 'takenAt'> & { date: string })>(historyQuery);
+  
+  const history = useMemo(() => {
+    if (!rawHistory) return null;
+    return rawHistory
+        .map(r => ({
+            ...r,
+            takenAt: (r as TestResult).takenAt || (r as any).date || new Date(0).toISOString(),
+        }))
+        .sort((a, b) => new Date(b.takenAt).getTime() - new Date(a.takenAt).getTime());
+  }, [rawHistory]);
+
 
   const chartData = useMemo(() => {
     if (!history) return [];
