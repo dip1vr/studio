@@ -32,18 +32,25 @@ const Palette = ({
 }) => {
     return (
         <div className='w-full'>
-            <ScrollArea className="w-full whitespace-nowrap rounded-md border">
+            <ScrollArea className="w-full whitespace-nowrap rounded-md border border-white/10">
                 <div className="flex w-max space-x-2 p-4">
                     {session.questions.map((_, index) => {
                         const status = session.userAnswers[index].status;
                         let statusClass = '';
-                        switch (status) {
-                        case 'answered': statusClass = 'bg-green-500/20 border-green-500 text-green-700 dark:text-green-400'; break;
-                        case 'not-answered': statusClass = 'bg-red-500/20 border-red-500 text-red-700 dark:text-red-400'; break;
-                        case 'marked-for-review': statusClass = 'bg-purple-500/20 border-purple-500 text-purple-700 dark:text-purple-400'; break;
-                        case 'answered-and-marked-for-review': statusClass = 'bg-yellow-500/20 border-yellow-500 text-yellow-700 dark:text-yellow-400'; break;
-                        default: statusClass = 'bg-muted hover:bg-muted/80 border';
+                        let isCurrent = index === currentQuestionIndex;
+
+                        if (isCurrent) {
+                            statusClass = 'bg-primary text-primary-foreground scale-110';
+                        } else {
+                            switch (status) {
+                            case 'answered': statusClass = 'bg-green-500/20 border-green-700 text-green-400'; break;
+                            case 'not-answered': statusClass = 'bg-red-500/20 border-red-700 text-red-400'; break;
+                            case 'marked-for-review': statusClass = 'bg-purple-500/20 border-purple-700 text-purple-400'; break;
+                            case 'answered-and-marked-for-review': statusClass = 'bg-yellow-500/20 border-yellow-700 text-yellow-400'; break;
+                            default: statusClass = 'bg-muted/40 hover:bg-muted/80 border-white/20';
+                            }
                         }
+                        
                         return (
                         <Button
                             key={index}
@@ -51,9 +58,9 @@ const Palette = ({
                             size="icon"
                             onClick={() => onQuestionSelect(index)}
                             className={cn(
-                            'h-12 w-12 text-lg font-semibold transition-all flex-shrink-0',
+                            'h-12 w-12 text-lg font-semibold transition-all flex-shrink-0 border',
                             statusClass,
-                            index === currentQuestionIndex ? 'ring-2 ring-primary ring-offset-2 scale-110' : ''
+                            isCurrent ? 'ring-2 ring-primary-foreground ring-offset-2 ring-offset-background' : 'hover:scale-105'
                             )}
                         >
                             {index + 1}
@@ -281,7 +288,7 @@ export function TestInterface({ testId }: { testId: string }) {
   const currentQuestion: Question | undefined = session?.questions[currentQuestionIndex];
   const currentUserAnswer: UserAnswer | undefined = session?.userAnswers[currentQuestionIndex];
 
-  if (!isMounted) return <div className="fixed inset-0 flex items-center justify-center bg-background">Loading Test...</div>;
+  if (!isMounted) return <div className="fixed inset-0 flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   if (!session || !currentQuestion) {
       useEffect(() => notFound(), []);
       return null;
@@ -294,21 +301,26 @@ export function TestInterface({ testId }: { testId: string }) {
   };
 
   return (
-    <div className="bg-secondary/30 min-h-[calc(100vh-3.5rem)]">
+    <div className="bg-gradient-to-br from-[#0c132c] to-[#121a3a] text-white min-h-[calc(100vh-3.5rem)]">
       <main className="max-w-6xl mx-auto p-4 md:p-8">
-            <Card className="shadow-lg">
+            <Card className="shadow-2xl bg-white/5 border-white/10 backdrop-blur-lg">
               <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className='flex-1'>
-                    <p className='text-sm text-muted-foreground'>Question {currentQuestionIndex + 1} of {session.questions.length}</p>
-                    <CardTitle className="text-xl md:text-2xl mt-1">
+                    <p className='text-sm text-slate-400'>Question {currentQuestionIndex + 1} of {session.questions.length}</p>
+                    <CardTitle className="text-xl md:text-2xl mt-1 font-headline">
                       {session.config.exam}
                     </CardTitle>
                   </div>
-                {timeLeft !== null && <div className="text-lg font-mono font-semibold tabular-nums text-right shrink-0"><span className="text-muted-foreground text-sm block">Time Left</span> {formatTime(timeLeft)}</div>}
+                {timeLeft !== null && (
+                    <div className="text-right shrink-0">
+                        <span className="text-sm text-slate-400 block">Time Left</span>
+                        <div className="text-2xl font-mono font-bold tabular-nums text-white">{formatTime(timeLeft)}</div>
+                    </div>
+                )}
               </CardHeader>
 
               <CardContent className="space-y-6">
-                <div className="prose prose-lg dark:prose-invert max-w-none font-semibold">
+                <div className="prose prose-lg prose-invert max-w-none font-semibold text-slate-200">
                     <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                         {currentQuestion.questionText}
                     </ReactMarkdown>
@@ -316,12 +328,12 @@ export function TestInterface({ testId }: { testId: string }) {
                 <RadioGroup key={currentQuestionIndex} value={currentUserAnswer?.selectedOption?.toString()} onValueChange={handleOptionChange} className="space-y-3">
                     {currentQuestion.options.map((option, index) => (
                         <Label key={index} htmlFor={`option-${index}`} className={cn(
-                            "flex items-start rounded-lg border p-4 transition-all cursor-pointer text-base",
-                            "hover:border-primary hover:bg-primary/5",
-                            currentUserAnswer?.selectedOption === index && "border-primary bg-primary/10 ring-2 ring-primary"
+                            "flex items-start rounded-lg border p-4 transition-all duration-300 cursor-pointer text-base bg-black/20 border-white/10",
+                            "hover:border-primary/70 hover:bg-primary/10",
+                            currentUserAnswer?.selectedOption === index && "border-primary bg-primary/20 ring-2 ring-primary"
                          )}>
-                            <RadioGroupItem value={index.toString()} id={`option-${index}`} className="h-6 w-6 mt-0.5"/>
-                            <span className="ml-4 font-medium flex-1">
+                            <RadioGroupItem value={index.toString()} id={`option-${index}`} className="h-6 w-6 mt-0.5 border-slate-500 text-primary focus:ring-primary focus:ring-offset-background"/>
+                            <span className="ml-4 font-medium flex-1 text-slate-300">
                                 <ReactMarkdown components={{ p: React.Fragment }} remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                                     {option}
                                 </ReactMarkdown>
@@ -331,7 +343,7 @@ export function TestInterface({ testId }: { testId: string }) {
                 </RadioGroup>
               </CardContent>
               
-              <div className="px-6 py-4 border-y">
+              <div className="px-6 py-4 border-y border-white/10">
                 <Palette 
                     session={session} 
                     currentQuestionIndex={currentQuestionIndex}
@@ -341,8 +353,8 @@ export function TestInterface({ testId }: { testId: string }) {
 
               <CardFooter className="flex flex-wrap items-center justify-between gap-4 pt-6">
                 <div className='flex gap-2 flex-wrap'>
-                  <Button variant="outline" onClick={handleMarkForReview}><Bookmark className="mr-2 h-4 w-4"/>Mark for Review</Button>
-                  <Button variant="ghost" onClick={clearResponse}>Clear Response</Button>
+                  <Button variant="outline" className="bg-transparent border-slate-600 hover:bg-slate-700 hover:text-slate-100" onClick={handleMarkForReview}><Bookmark className="mr-2 h-4 w-4"/>Mark for Review</Button>
+                  <Button variant="ghost" className="hover:bg-slate-700 hover:text-slate-100" onClick={clearResponse}>Clear Response</Button>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="secondary" onClick={() => setCurrentQuestionIndex(p => Math.max(0, p - 1))} disabled={currentQuestionIndex === 0}><ChevronLeft className="mr-2 h-4 w-4"/>Previous</Button>
@@ -350,7 +362,7 @@ export function TestInterface({ testId }: { testId: string }) {
                     <Button onClick={() => setCurrentQuestionIndex(p => Math.min(session.questions.length - 1, p + 1))}>Save & Next <ChevronRight className="ml-2 h-4 w-4"/></Button>
                   ) : (
                      <AlertDialog>
-                        <AlertDialogTrigger asChild><Button variant="default">Submit Test</Button></AlertDialogTrigger>
+                        <AlertDialogTrigger asChild><Button variant="default" className="bg-green-600 hover:bg-green-700 text-white">Submit Test</Button></AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Ready to finish?</AlertDialogTitle>
@@ -381,3 +393,6 @@ export function TestInterface({ testId }: { testId: string }) {
     </div>
   );
 }
+
+
+    
