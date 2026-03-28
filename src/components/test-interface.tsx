@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import type { TestSession, UserAnswer, Question, TestResult } from '@/lib/types';
