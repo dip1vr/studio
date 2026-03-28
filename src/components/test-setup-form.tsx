@@ -343,7 +343,7 @@ export function TestSetupForm() {
                     render={({ field }) => (
                         <FormItem>
                             <div className="flex justify-between items-center mb-2">
-                                <FormLabel className="flex items-center gap-2 text-lg"><Clock className="w-6 h-6 text-primary"/>Time Duration</FormLabel>
+                                <FormLabel className="flex items-center gap-2 text-base md:text-lg"><Clock className="w-5 h-5 md:w-6 md:h-6 text-primary"/>Time Duration</FormLabel>
                                 <span className="text-xl font-bold text-primary">{field.value}m</span>
                             </div>
                             <FormControl>
@@ -367,7 +367,7 @@ export function TestSetupForm() {
                     render={({ field }) => (
                         <FormItem>
                             <div className="flex justify-between items-center mb-2">
-                                <FormLabel className="flex items-center gap-2 text-lg"><TrendingUp className="w-6 h-6 text-primary"/>Difficulty Level</FormLabel>
+                                <FormLabel className="flex items-center gap-2 text-base md:text-lg"><TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-primary"/>Difficulty Level</FormLabel>
                                 <span className="inline-block px-3 py-1 text-sm font-semibold text-red-800 bg-red-200 rounded-full dark:bg-red-900 dark:text-red-300">{field.value}</span>
                             </div>
                             <FormControl>
@@ -392,10 +392,10 @@ export function TestSetupForm() {
                 name="numberOfQuestions"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="flex items-center gap-2 text-lg mb-4"><Hash className="w-6 h-6 text-primary"/>Number of Questions</FormLabel>
+                        <FormLabel className="flex items-center gap-2 text-base md:text-lg mb-4"><Hash className="w-5 h-5 md:w-6 md:h-6 text-primary"/>Number of Questions</FormLabel>
                         <div className="flex items-center justify-center gap-4">
                             <Button type="button" variant="outline" size="icon" className="h-12 w-12 rounded-full transition-transform hover:scale-110 active:scale-100" onClick={() => form.setValue('numberOfQuestions', Math.max(5, field.value - 5))}><Minus /></Button>
-                            <div className="text-5xl font-bold text-primary w-24 text-center transition-all duration-300">{field.value}</div>
+                            <div className="text-4xl sm:text-5xl font-bold text-primary w-24 text-center transition-all duration-300">{field.value}</div>
                             <Button type="button" variant="outline" size="icon" className="h-12 w-12 rounded-full transition-transform hover:scale-110 active:scale-100" onClick={() => form.setValue('numberOfQuestions', Math.min(100, field.value + 5))}><Plus /></Button>
                         </div>
                         <div className="flex justify-between text-xs text-muted-foreground mt-4">
@@ -413,7 +413,7 @@ export function TestSetupForm() {
                 name="suggestion"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel className="flex items-center gap-2 text-lg"><Info className="w-6 h-6 text-primary"/>Specific Instructions (Optional)</FormLabel>
+                    <FormLabel className="flex items-center gap-2 text-base md:text-lg"><Info className="w-5 h-5 md:w-6 md:h-6 text-primary"/>Specific Instructions (Optional)</FormLabel>
                     <FormControl>
                         <Textarea
                         placeholder="e.g., 'Focus on questions from the Mughal period' or 'Generate questions involving trigonometry identities'."
@@ -466,15 +466,15 @@ export function TestSetupForm() {
             <h3 className="text-lg font-bold text-center mb-4">Test Summary</h3>
             <div className="flex justify-around items-center text-center">
                 <div>
-                    <p className="text-3xl font-bold">{watchAllFields.numberOfQuestions}</p>
+                    <p className="text-2xl sm:text-3xl font-bold">{watchAllFields.numberOfQuestions}</p>
                     <p className="text-sm opacity-80">Questions</p>
                 </div>
                  <div>
-                    <p className="text-3xl font-bold">{watchAllFields.timeLimit || "N/A"}{watchAllFields.timeLimit && 'm'}</p>
+                    <p className="text-2xl sm:text-3xl font-bold">{watchAllFields.timeLimit || "N/A"}{watchAllFields.timeLimit && 'm'}</p>
                     <p className="text-sm opacity-80">Duration</p>
                 </div>
                  <div>
-                    <p className="text-3xl font-bold">{watchAllFields.difficulty}</p>
+                    <p className="text-2xl sm:text-3xl font-bold">{watchAllFields.difficulty}</p>
                     <p className="text-sm opacity-80">Level</p>
                 </div>
             </div>
