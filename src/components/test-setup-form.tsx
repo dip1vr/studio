@@ -34,6 +34,7 @@ import { Loader2 } from "lucide-react";
 import type { TestSession, UserConfiguration } from "@/lib/types";
 import { useDoc, useUser, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
+import { Textarea } from "./ui/textarea";
 
 const formSchema = z.object({
   exam: z.string({ required_error: "Please select an exam." }),
@@ -42,6 +43,7 @@ const formSchema = z.object({
   numberOfQuestions: z.number().min(5).max(100),
   difficulty: z.enum(DIFFICULTIES),
   language: z.enum(LANGUAGES),
+  suggestion: z.string().optional(),
   timeLimit: z.coerce.number().int().positive().optional(),
   negativeMarking: z.boolean().default(false),
   negativeMarkingRatio: z.coerce.number().optional(),
@@ -132,6 +134,7 @@ export function TestSetupForm() {
           numberOfQuestions: values.numberOfQuestions,
           difficulty: values.difficulty,
           language: values.language,
+          suggestion: values.suggestion,
           apiKey: userConfig.apiKey,
         });
 
@@ -259,6 +262,25 @@ export function TestSetupForm() {
                     </FormControl>
                 </FormItem>
             )}
+        />
+        <FormField
+          control={form.control}
+          name="suggestion"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Specific Instructions (Optional)</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="e.g., 'Focus on questions from the Mughal period' or 'Generate questions involving trigonometry identities'."
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                Provide specific instructions to the AI for question generation.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
         />
         <div className="grid md:grid-cols-2 gap-8">
             <FormField

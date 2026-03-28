@@ -21,6 +21,7 @@ const GenerateMockExamQuestionsInputSchema = z.object({
   difficulty: z.enum(['Easy', 'Medium', 'Hard', 'Mixed']).describe('The difficulty level of the questions.'),
   numberOfQuestions: z.number().int().min(1).max(100).describe('The number of questions to generate.'),
   language: z.enum(['English', 'Hindi', 'Bilingual']).describe('The language for the questions and options.'),
+  suggestion: z.string().optional().describe('Specific instructions from the user to guide the AI.'),
   apiKey: z.string().optional().describe('Optional API key to use for this request.'),
 });
 export type GenerateMockExamQuestionsInput = z.infer<typeof GenerateMockExamQuestionsInputSchema>;
@@ -48,6 +49,10 @@ Focus on the subject: "{{subject}}".
 {{/if}}
 {{#if topic}}
 Specifically, cover the topic: "{{topic}}".
+{{/if}}
+
+{{#if suggestion}}
+**USER SUGGESTION:** The user has provided the following specific instructions. Adhere to them carefully: "{{suggestion}}"
 {{/if}}
 
 **VERY IMPORTANT INSTRUCTIONS FOR ACCURACY:**

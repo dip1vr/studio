@@ -15,6 +15,7 @@ export type ExamConfig = {
   numberOfQuestions: number;
   difficulty: 'Easy' | 'Medium' | 'Hard' | 'Mixed';
   language: 'English' | 'Hindi' | 'Bilingual';
+  suggestion?: string;
   timeLimit?: number; // in minutes
   negativeMarking: boolean;
   negativeMarkingRatio?: number;
