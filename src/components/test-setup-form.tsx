@@ -221,7 +221,7 @@ export function TestSetupForm() {
                         <FormLabel className="flex items-center gap-2 text-base"><BookOpen className="w-5 h-5 text-primary"/> Exam</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                            <SelectTrigger className="bg-background/70"><SelectValue placeholder="Select an exam" /></SelectTrigger>
+                            <SelectTrigger className="bg-background/70 transition-all duration-200 hover:border-primary/40"><SelectValue placeholder="Select an exam" /></SelectTrigger>
                             </FormControl>
                             <SelectContent>{EXAMS.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
                         </Select>
@@ -241,7 +241,7 @@ export function TestSetupForm() {
                                     <Button
                                     variant="outline"
                                     className={cn(
-                                        "w-full justify-start text-left font-normal h-auto min-h-10 py-2 bg-background/70",
+                                        "w-full justify-start text-left font-normal h-auto min-h-10 py-2 bg-background/70 transition-all duration-200 hover:border-primary/40",
                                         !field.value?.length && "text-muted-foreground"
                                     )}
                                     disabled={subjects.length === 0}
@@ -297,7 +297,7 @@ export function TestSetupForm() {
                             disabled={topics.length === 0}
                         >
                             <FormControl>
-                            <SelectTrigger className="bg-background/70">
+                            <SelectTrigger className="bg-background/70 transition-all duration-200 hover:border-primary/40">
                                 <SelectValue placeholder="Select a topic" />
                             </SelectTrigger>
                             </FormControl>
@@ -324,7 +324,7 @@ export function TestSetupForm() {
                         <FormLabel className="flex items-center gap-2 text-base"><Languages className="w-5 h-5 text-primary"/> Language</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                            <SelectTrigger className="bg-background/70"><SelectValue placeholder="Select language" /></SelectTrigger>
+                            <SelectTrigger className="bg-background/70 transition-all duration-200 hover:border-primary/40"><SelectValue placeholder="Select language" /></SelectTrigger>
                             </FormControl>
                             <SelectContent>{LANGUAGES.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
                         </Select>
@@ -394,9 +394,9 @@ export function TestSetupForm() {
                     <FormItem>
                         <FormLabel className="flex items-center gap-2 text-lg mb-4"><Hash className="w-6 h-6 text-primary"/>Number of Questions</FormLabel>
                         <div className="flex items-center justify-center gap-4">
-                            <Button type="button" variant="outline" size="icon" className="h-12 w-12 rounded-full" onClick={() => form.setValue('numberOfQuestions', Math.max(5, field.value - 5))}><Minus /></Button>
-                            <div className="text-5xl font-bold text-primary w-24 text-center">{field.value}</div>
-                            <Button type="button" variant="outline" size="icon" className="h-12 w-12 rounded-full" onClick={() => form.setValue('numberOfQuestions', Math.min(100, field.value + 5))}><Plus /></Button>
+                            <Button type="button" variant="outline" size="icon" className="h-12 w-12 rounded-full transition-transform hover:scale-110 active:scale-100" onClick={() => form.setValue('numberOfQuestions', Math.max(5, field.value - 5))}><Minus /></Button>
+                            <div className="text-5xl font-bold text-primary w-24 text-center transition-all duration-300">{field.value}</div>
+                            <Button type="button" variant="outline" size="icon" className="h-12 w-12 rounded-full transition-transform hover:scale-110 active:scale-100" onClick={() => form.setValue('numberOfQuestions', Math.min(100, field.value + 5))}><Plus /></Button>
                         </div>
                         <div className="flex justify-between text-xs text-muted-foreground mt-4">
                             <span>Min: 5</span>
@@ -433,7 +433,7 @@ export function TestSetupForm() {
                 control={form.control}
                 name="negativeMarking"
                 render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 bg-background/20">
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 bg-background/20 transition-colors duration-200 hover:bg-background/30">
                         <div className="space-y-0.5">
                             <FormLabel className="text-base">Negative Marking</FormLabel>
                             <FormDescription className="text-xs">Deduct marks for incorrect answers.</FormDescription>
@@ -451,7 +451,7 @@ export function TestSetupForm() {
                             <FormItem>
                             <FormLabel className="text-sm">Ratio</FormLabel>
                             <FormControl>
-                                <Input type="number" step="0.01" placeholder="e.g., 0.25" {...field} value={field.value ?? ''} className="bg-background/70" />
+                                <Input type="number" step="0.01" placeholder="e.g., 0.25" {...field} value={field.value ?? ''} className="bg-background/70 transition-colors duration-200" />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
