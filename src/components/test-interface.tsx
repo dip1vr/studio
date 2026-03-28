@@ -16,6 +16,9 @@ import { ChevronLeft, ChevronRight, Bookmark, Circle, CheckCircle, XCircle, Load
 import { cn } from '@/lib/utils';
 import { useUser, useFirestore } from '@/firebase';
 import { doc, writeBatch } from 'firebase/firestore';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 
 const Palette = ({
@@ -259,7 +262,7 @@ export function TestInterface({ testId }: { testId: string }) {
   };
 
   const clearResponse = () => {
-      updateAnswer(currentQuestionIndex);
+      updateAnswer(currentQuestionIndex, undefined, { selectedOption: null });
   };
   
   const handleQuestionSelect = (index: number) => {
@@ -296,7 +299,11 @@ export function TestInterface({ testId }: { testId: string }) {
               </CardHeader>
 
               <CardContent className="space-y-6">
-                <p className="text-base md:text-lg font-semibold leading-relaxed">{currentQuestion.questionText}</p>
+                <div className="prose prose-lg dark:prose-invert max-w-none font-semibold">
+                    <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                        {currentQuestion.questionText}
+                    </ReactMarkdown>
+                </div>
                 <RadioGroup key={currentQuestionIndex} value={currentUserAnswer?.selectedOption?.toString()} onValueChange={handleOptionChange} className="space-y-3">
                     {currentQuestion.options.map((option, index) => (
                         <Label key={index} htmlFor={`option-${index}`} className={cn(
@@ -305,7 +312,11 @@ export function TestInterface({ testId }: { testId: string }) {
                             currentUserAnswer?.selectedOption === index && "border-primary bg-primary/10 ring-2 ring-primary"
                          )}>
                             <RadioGroupItem value={index.toString()} id={`option-${index}`} className="h-6 w-6 mt-0.5"/>
-                            <span className="ml-4 font-medium flex-1">{option}</span>
+                            <span className="ml-4 font-medium flex-1">
+                                <ReactMarkdown components={{ p: React.Fragment }} remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                                    {option}
+                                </ReactMarkdown>
+                            </span>
                         </Label>
                     ))}
                 </RadioGroup>
