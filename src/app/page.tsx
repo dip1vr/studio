@@ -32,7 +32,7 @@ export default function Home() {
         <section className="relative w-full pt-24 md:pt-32 lg:pt-40 pb-12 md:pb-24 lg:pb-32 overflow-hidden">
           <div className="absolute top-0 left-0 -z-10 h-full w-full bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(29,78,216,0.15),rgba(255,255,255,0))]"></div>
           <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center space-y-6 text-center">
+            <div className="flex flex-col items-center space-y-6 text-center animate-in fade-in slide-in-from-top-12 duration-1000 ease-out">
               <div className="space-y-4">
                 <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary to-foreground/80 leading-tight">
                   Master Your Competitive Exams with AI
@@ -42,26 +42,26 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex flex-col gap-4 min-[400px]:flex-row">
-                <Button asChild size="lg" className="shadow-lg shadow-primary/30 transition-transform hover:scale-105">
+                <Button asChild size="lg" className="shadow-lg shadow-primary/30 transition-transform duration-300 hover:scale-105">
                   <Link href="/test/new">
                     Create Your First Test
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
-                <Button asChild variant="ghost" size="lg" className="transition-transform hover:scale-105">
+                <Button asChild variant="ghost" size="lg" className="transition-transform duration-300 hover:scale-105">
                   <Link href="/history">View My History</Link>
                 </Button>
               </div>
             </div>
              {heroImage && (
-                <div className="relative mt-16 flex items-center justify-center">
+                <div className="relative mt-16 flex items-center justify-center animate-in fade-in zoom-in-95 duration-1000 ease-out delay-300">
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent z-10"></div>
                      <Image
                         src={heroImage.imageUrl}
                         alt={heroImage.description}
                         width={800}
                         height={450}
-                        className="rounded-2xl object-cover border shadow-2xl shadow-primary/10"
+                        className="rounded-2xl object-cover border shadow-2xl shadow-primary/10 transition-transform duration-500 hover:scale-105 hover:-rotate-1"
                         data-ai-hint={heroImage.imageHint}
                         priority
                     />
@@ -80,18 +80,20 @@ export default function Home() {
               </p>
             </div>
             <div className="mx-auto grid max-w-5xl items-stretch gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature) => (
-                <Card key={feature.title} className="flex flex-col border-transparent shadow-md hover:shadow-xl hover:border-primary/30 hover:-translate-y-2 transition-all duration-300 bg-card/50 backdrop-blur-sm">
-                  <CardHeader className="items-center text-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary/80 to-primary text-primary-foreground mb-4 shadow-lg shadow-primary/20">
-                        {feature.icon}
-                    </div>
-                    <CardTitle className="text-xl font-headline">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center flex-1">
-                    <p className="text-muted-foreground">{feature.description}</p>
-                  </CardContent>
-                </Card>
+              {features.map((feature, index) => (
+                 <div key={feature.title} className="animate-in fade-in slide-in-from-bottom-16 duration-1000 ease-out" style={{ animationDelay: `${300 + index * 200}ms`}}>
+                    <Card className="h-full flex flex-col border-transparent shadow-md hover:shadow-xl hover:border-primary/30 hover:-translate-y-2 transition-all duration-300 bg-card/50 backdrop-blur-sm">
+                        <CardHeader className="items-center text-center">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary/80 to-primary text-primary-foreground mb-4 shadow-lg shadow-primary/20">
+                                {feature.icon}
+                            </div>
+                            <CardTitle className="text-xl font-headline">{feature.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center flex-1">
+                            <p className="text-muted-foreground">{feature.description}</p>
+                        </CardContent>
+                    </Card>
+                </div>
               ))}
             </div>
           </div>
@@ -106,7 +108,7 @@ export default function Home() {
               </p>
             </div>
             <div className="mx-auto w-full max-w-sm space-y-2">
-                <Button asChild size="lg" className="w-full shadow-lg shadow-primary/30 transition-transform hover:scale-105">
+                <Button asChild size="lg" className="w-full shadow-lg shadow-primary/30 transition-transform duration-300 hover:scale-105">
                     <Link href="/test/new">
                       Start a Free Mock Test Now
                        <ArrowRight className="ml-2 h-5 w-5" />
