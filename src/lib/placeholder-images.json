@@ -3,8 +3,14 @@
     {
       "id": "hero-image",
       "description": "An abstract, modern graphic representing learning and AI, with blue and purple tones.",
-      "imageUrl": "https://picsum.photos/seed/vidyarthi-hero-new/600/600",
+      "imageUrl": "https://picsum.photos/seed/vidyarthi-hero-new/800/450",
       "imageHint": "AI learning"
+    },
+    {
+      "id": "dashboard-empty",
+      "description": "An encouraging and clean illustration for an empty dashboard, inviting users to start.",
+      "imageUrl": "https://picsum.photos/seed/dashboard-empty/600/400",
+      "imageHint": "start journey"
     }
   ]
 }
