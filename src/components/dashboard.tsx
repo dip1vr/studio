@@ -9,7 +9,7 @@ import { collection, query } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
-import { ArrowRight, BookOpen, Clock, Target, BarChart2, PlayCircle, Medal } from 'lucide-react';
+import { ArrowRight, BookOpen, Clock, Target, BarChart2, PlayCircle } from 'lucide-react';
 import { format, subDays, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { TestResult } from '@/lib/types';
@@ -84,6 +84,7 @@ export function Dashboard() {
                 ...r,
                 takenAt: (r as TestResult).takenAt || (r as any).date || new Date(0).toISOString(),
             }))
+            .filter(r => r.id && r.config && r.accuracy !== undefined && r.timeTaken !== undefined) // Defensive filter
             .sort((a, b) => new Date(b.takenAt).getTime() - new Date(a.takenAt).getTime());
     }, [rawResults]);
 

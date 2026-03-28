@@ -22,10 +22,10 @@ export default function HomePage() {
     );
   }
 
-  // Show landing page for guests/anonymous users, dashboard for logged-in users
-  if (!user || user.isAnonymous) {
-    return <LandingPage />;
+  // Show dashboard for logged-in (non-anonymous) users, otherwise show landing page
+  if (user && !user.isAnonymous) {
+    return <Dashboard />;
   }
 
-  return <Dashboard />;
+  return <LandingPage />;
 }
