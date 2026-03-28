@@ -10,8 +10,8 @@ export type AIProviderSettings = {
 
 export type ExamConfig = {
   exam: string;
-  subject?: string;
-  topic?: string;
+  subjects?: string[];
+  topics?: string[];
   numberOfQuestions: number;
   difficulty: 'Easy' | 'Medium' | 'Hard' | 'Mixed';
   language: 'English' | 'Hindi' | 'Bilingual';
@@ -45,6 +45,7 @@ export type TestSession = {
 
 export type PerformanceBreakdown = {
   category: string;
+  categoryType: 'subject' | 'topic';
   accuracy: number;
   correctCount: number;
   incorrectCount: number;

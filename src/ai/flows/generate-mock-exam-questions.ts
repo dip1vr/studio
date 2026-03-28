@@ -16,8 +16,8 @@ import {z} from 'genkit';
 // Input Schema
 const GenerateMockExamQuestionsInputSchema = z.object({
   exam: z.string().describe('The name of the Indian Government Exam.'),
-  subject: z.string().optional().describe('The subject for the questions (optional).'),
-  topic: z.string().optional().describe('The specific topic within the subject (optional).'),
+  subjects: z.array(z.string()).optional().describe('A list of subjects for the questions (optional).'),
+  topics: z.array(z.string()).optional().describe('A list of specific topics within the subjects (optional).'),
   difficulty: z.enum(['Easy', 'Medium', 'Hard', 'Mixed']).describe('The difficulty level of the questions.'),
   numberOfQuestions: z.number().int().min(1).max(100).describe('The number of questions to generate.'),
   language: z.enum(['English', 'Hindi', 'Bilingual']).describe('The language for the questions and options.'),
@@ -32,6 +32,8 @@ const QuestionOutputSchema = z.object({
   options: z.array(z.string()).length(4).describe('An array containing the four answer options (A, B, C, D).'),
   correctAnswerIndex: z.number().int().min(0).max(3).describe('The 0-indexed position of the correct answer within the options array.'),
   explanation: z.string().describe('A detailed explanation for the correct answer.'),
+  subject: z.string().describe('The subject this question belongs to.'),
+  topic: z.string().describe('The topic this question belongs to.'),
 });
 
 const GenerateMockExamQuestionsOutputSchema = z.array(QuestionOutputSchema).describe('An array of generated multiple-choice questions.');
@@ -44,11 +46,11 @@ Your task is to generate {{numberOfQuestions}} unique multiple-choice questions 
 
 The difficulty level should be "{{difficulty}}".
 
-{{#if subject}}
-Focus on the subject: "{{subject}}".
+{{#if subjects}}
+Focus on the following subjects: {{#each subjects}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}.
 {{/if}}
-{{#if topic}}
-Specifically, cover the topic: "{{topic}}".
+{{#if topics}}
+Within those subjects, specifically cover these topics: {{#each topics}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}.
 {{/if}}
 
 {{#if suggestion}}
@@ -57,26 +59,26 @@ Specifically, cover the topic: "{{topic}}".
 
 **VERY IMPORTANT INSTRUCTIONS FOR ACCURACY:**
 
-1.  **Chain of Thought Process:** Before creating the options, first, think step-by-step to formulate the question text and determine the single, unambiguously correct answer and a detailed explanation. Only after this internal verification should you create the multiple-choice options. Ensure one option is 100% correct and the others are plausible but incorrect distractors.
+1.  **Chain of Thought Process:** Before creating the options, first, think step-by-step to formulate the question text, determine its subject and topic, find the single, unambiguously correct answer, and create a detailed explanation. Only after this internal verification should you create the multiple-choice options. Ensure one option is 100% correct and the others are plausible but incorrect distractors.
 
-2.  **Subject-Specific Rules:**
-    {{#if subject}}
-    When the subject is "Quantitative Aptitude" or "Mathematics":
+2.  **Subject-Specific Rules:** For each question you generate, apply the following rules based on its subject:
+    When a question's subject is "Quantitative Aptitude" or "Mathematics":
     - **CRITICAL FOR RENDERING:** Wrap all mathematical formulas and expressions in single dollar signs for inline math (e.g., $x^2 + y^2 = r^2$) and double dollar signs for block-level math. For example: $$ \\frac{a}{b} $$. This is absolutely essential for the formulas to display correctly.
     - Solve the question yourself step-by-step to ensure the correct answer is generated accurately before creating the options.
 
-    When the subject is "English Language & Comprehension" or "English":
+    When a question's subject is "English Language & Comprehension" or "English":
     - Strictly adhere to established grammar rules, like those found in Wren & Martin. Avoid using ambiguous synonyms or idioms in a way that could have multiple interpretations.
 
-    When the subject is "General Intelligence & Reasoning" or "Reasoning":
+    When a question's subject is "General Intelligence & Reasoning" or "Reasoning":
     - Double-check the logic of any patterns (e.g., in number or letter series). The logic must be consistent and not open to interpretation. Verify your own logic before finalizing the question.
-    {{/if}}
 
 Your final output **MUST** be a JSON array of question objects. Each object must have:
 - 'questionText': The question itself. Ensure all math expressions are wrapped in dollar signs ($...$ or $$...$$).
 - 'options': An array of exactly four distinct answer choices.
 - 'correctAnswerIndex': The 0-indexed number (0, 1, 2, or 3) corresponding to the correct answer in the 'options' array.
 - 'explanation': Provide a detailed, step-by-step explanation in simple, easy-to-understand language. First, explain the conventional method. Then, if a faster method exists, add a section titled "**Short Trick:**" and explain the shortcut. **Ensure all mathematical expressions are in LaTeX format and correctly wrapped in dollar signs ($...$ for inline and $$...$$ for block) for proper rendering.**
+- 'subject': The subject this question belongs to from the provided list of subjects.
+- 'topic': The specific topic this question belongs to.
 
 Ensure the questions are relevant, clear, and unambiguous.
 `;

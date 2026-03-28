@@ -16,7 +16,6 @@ import rehypeKatex from 'rehype-katex';
 
 import type { TestResult, TestSession } from '@/lib/types';
 import { offerPersonalizedStudySuggestions } from '@/ai/flows/offer-personalized-study-suggestions';
-import { useToast } from '@/hooks/use-toast';
 
 const COLORS = {
   correct: 'hsl(var(--chart-2))',
@@ -28,7 +27,6 @@ export function ResultPageClient({ resultId }: { resultId: string }) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const { toast } = useToast();
 
   const resultRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
@@ -56,7 +54,7 @@ export function ResultPageClient({ resultId }: { resultId: string }) {
               skippedQuestions: result.skipped,
               overallAccuracy: result.accuracy,
               performanceBreakdown: result.performanceBreakdown.map(p => ({
-                categoryType: result.config.topic ? 'topic' as const : 'subject' as const,
+                categoryType: p.categoryType,
                 categoryName: p.category,
                 correctCount: p.correctCount,
                 incorrectCount: p.incorrectCount,

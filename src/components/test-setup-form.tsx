@@ -24,6 +24,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -35,11 +44,13 @@ import type { TestSession, UserConfiguration } from "@/lib/types";
 import { useDoc, useUser, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Textarea } from "./ui/textarea";
+import { ScrollArea } from "./ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   exam: z.string({ required_error: "Please select an exam." }),
-  subject: z.string().optional(),
-  topic: z.string().optional(),
+  subjects: z.array(z.string()).optional(),
+  topics: z.array(z.string()).optional(),
   numberOfQuestions: z.number().min(5).max(100),
   difficulty: z.enum(DIFFICULTIES),
   language: z.enum(LANGUAGES),
@@ -72,6 +83,8 @@ export function TestSetupForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      subjects: [],
+      topics: [],
       numberOfQuestions: 10,
       difficulty: "Medium",
       language: "English",
@@ -80,38 +93,41 @@ export function TestSetupForm() {
   });
 
   const examValue = form.watch("exam");
-  const subjectValue = form.watch("subject");
+  const subjectsValue = form.watch("subjects");
   const negativeMarkingValue = form.watch("negativeMarking");
   
   useEffect(() => {
     if (examValue) {
       const availableSubjects = SUBJECTS[examValue] || [];
       setSubjects(availableSubjects);
-      const currentSubject = form.getValues('subject');
-      if(currentSubject && currentSubject !== 'all' && !availableSubjects.includes(currentSubject)) {
-        form.resetField("subject", { defaultValue: undefined });
-        form.resetField("topic", { defaultValue: undefined });
+      const currentSubjects = form.getValues('subjects') || [];
+      const validSubjects = currentSubjects.filter(s => availableSubjects.includes(s));
+
+      if (validSubjects.length !== currentSubjects.length) {
+          form.setValue("subjects", validSubjects);
       }
     } else {
       setSubjects([]);
-      form.resetField("subject", { defaultValue: undefined });
-      form.resetField("topic", { defaultValue: undefined });
+      form.setValue("subjects", []);
     }
-  }, [examValue, form]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [examValue]);
 
   useEffect(() => {
-    if (examValue && subjectValue) {
-        const availableTopics = TOPICS[examValue]?.[subjectValue] || [];
+    if (examValue && subjectsValue && subjectsValue.length === 1) {
+        const availableTopics = TOPICS[examValue]?.[subjectsValue[0]] || [];
         setTopics(availableTopics);
-        const currentTopic = form.getValues('topic');
-        if(currentTopic && currentTopic !== 'all' && !availableTopics.includes(currentTopic)) {
-            form.resetField("topic", { defaultValue: undefined });
+        const currentTopics = form.getValues('topics') || [];
+        const validTopics = currentTopics.filter(t => availableTopics.includes(t));
+        if(validTopics.length !== currentTopics.length) {
+            form.setValue('topics', validTopics);
         }
     } else {
         setTopics([]);
-        form.resetField("topic", { defaultValue: undefined });
+        form.setValue('topics', []);
     }
-  }, [examValue, subjectValue, form]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [examValue, subjectsValue]);
 
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -129,8 +145,8 @@ export function TestSetupForm() {
       try {
         const questions = await generateMockExamQuestions({
           exam: values.exam,
-          subject: values.subject === 'all' ? undefined : values.subject,
-          topic: values.topic === 'all' ? undefined : values.topic,
+          subjects: values.subjects && values.subjects.length > 0 ? values.subjects : undefined,
+          topics: values.topics && values.topics.length > 0 ? values.topics : undefined,
           numberOfQuestions: values.numberOfQuestions,
           difficulty: values.difficulty,
           language: values.language,
@@ -200,32 +216,115 @@ export function TestSetupForm() {
             />
             <FormField
               control={form.control}
-              name="subject"
+              name="subjects"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Subject (Optional)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value ?? 'all'} disabled={subjects.length === 0}>
-                    <FormControl>
-                      <SelectTrigger><SelectValue placeholder="Select a subject" /></SelectTrigger>
-                    </FormControl>
-                    <SelectContent><SelectItem value="all">All Subjects</SelectItem>{subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                  </Select>
+                  <FormLabel>Subjects</FormLabel>
+                   <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal h-auto min-h-10 py-2",
+                            !field.value?.length && "text-muted-foreground"
+                          )}
+                          disabled={subjects.length === 0}
+                        >
+                          {field.value?.length > 0 ? (
+                             <div className="flex gap-2 flex-wrap">
+                                {field.value.map(val => (
+                                    <div key={val} className="truncate rounded-md bg-secondary text-secondary-foreground px-2 py-1 text-xs">
+                                        {val}
+                                    </div>
+                                ))}
+                             </div>
+                          ) : (
+                            "Select subjects"
+                          )}
+                        </Button>
+                      </FormControl>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" align="start">
+                        <DropdownMenuLabel>Available Subjects</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <ScrollArea className="h-48">
+                            {subjects.map(subject => (
+                                <DropdownMenuCheckboxItem
+                                key={subject}
+                                checked={field.value?.includes(subject)}
+                                onCheckedChange={(checked) => {
+                                    const selected = field.value || [];
+                                    return checked
+                                    ? field.onChange([...selected, subject])
+                                    : field.onChange(selected.filter(s => s !== subject));
+                                }}
+                                >
+                                {subject}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </ScrollArea>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <FormMessage />
                 </FormItem>
               )}
             />
              <FormField
               control={form.control}
-              name="topic"
+              name="topics"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Topic (Optional)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value ?? 'all'} disabled={topics.length === 0}>
-                    <FormControl>
-                      <SelectTrigger><SelectValue placeholder="Select a topic" /></SelectTrigger>
-                    </FormControl>
-                    <SelectContent><SelectItem value="all">All Topics</SelectItem>{topics.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                  </Select>
+                  <FormLabel>Topics</FormLabel>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <FormControl>
+                        <Button
+                           variant="outline"
+                           className={cn(
+                            "w-full justify-start text-left font-normal h-auto min-h-10 py-2",
+                            !field.value?.length && "text-muted-foreground"
+                          )}
+                          disabled={topics.length === 0}
+                        >
+                          {field.value?.length > 0 ? (
+                             <div className="flex gap-2 flex-wrap">
+                                {field.value.map(val => (
+                                    <div key={val} className="truncate rounded-md bg-secondary text-secondary-foreground px-2 py-1 text-xs">
+                                        {val}
+                                    </div>
+                                ))}
+                             </div>
+                          ) : (
+                            "Select topics"
+                          )}
+                        </Button>
+                      </FormControl>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" align="start">
+                        <DropdownMenuLabel>Available Topics</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                         <ScrollArea className="h-48">
+                            {topics.map(topic => (
+                                <DropdownMenuCheckboxItem
+                                key={topic}
+                                checked={field.value?.includes(topic)}
+                                onCheckedChange={(checked) => {
+                                    const selected = field.value || [];
+                                    return checked
+                                    ? field.onChange([...selected, topic])
+                                    : field.onChange(selected.filter(s => s !== topic));
+                                }}
+                                >
+                                {topic}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </ScrollArea>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                   <FormDescription>
+                    Topics are only available when one subject is selected.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

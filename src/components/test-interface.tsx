@@ -130,14 +130,27 @@ export function TestInterface({ testId }: { testId: string }) {
         let incorrectAnswers = 0;
         let skipped = 0;
 
+        const performanceByCategory: { [key: string]: { correct: number; incorrect: number; skipped: number; total: number; type: 'subject' | 'topic' } } = {};
+
         session.questions.forEach((q, i) => {
+            const categoryName = q.topic || q.subject;
+            const categoryType = q.topic ? 'topic' as const : 'subject' as const;
+
+            if (!performanceByCategory[categoryName]) {
+                performanceByCategory[categoryName] = { correct: 0, incorrect: 0, skipped: 0, total: 0, type: categoryType };
+            }
+            performanceByCategory[categoryName].total++;
+
             const userAnswer = session.userAnswers[i];
             if (userAnswer.status === 'not-visited' || userAnswer.status === 'not-answered' || userAnswer.status === 'marked-for-review') {
                 skipped++;
+                performanceByCategory[categoryName].skipped++;
             } else if (userAnswer.selectedOption === q.correctAnswerIndex) {
                 correctAnswers++;
+                performanceByCategory[categoryName].correct++;
             } else {
                 incorrectAnswers++;
+                performanceByCategory[categoryName].incorrect++;
             }
         });
         
@@ -149,22 +162,18 @@ export function TestInterface({ testId }: { testId: string }) {
             score -= incorrectAnswers * session.config.negativeMarkingRatio;
         }
 
-        const performanceBreakdown: import('@/lib/types').PerformanceBreakdown[] = [];
-
-        if (session.config.topic || session.config.subject) {
-            const categoryName = session.config.topic || session.config.subject!;
-            const attemptedInCategory = correctAnswers + incorrectAnswers;
-            const accuracyInCategory = attemptedInCategory > 0 ? (correctAnswers / attemptedInCategory) * 100 : 0;
-            
-            performanceBreakdown.push({
-                category: categoryName,
-                accuracy: accuracyInCategory,
-                correctCount: correctAnswers,
-                incorrectCount: incorrectAnswers,
-                skippedCount: skipped,
-                totalCount: session.questions.length,
-            });
-        }
+        const performanceBreakdown: import('@/lib/types').PerformanceBreakdown[] = Object.entries(performanceByCategory).map(([category, stats]) => {
+            const attemptedInCategory = stats.correct + stats.incorrect;
+            return {
+                category: category,
+                categoryType: stats.type,
+                accuracy: attemptedInCategory > 0 ? (stats.correct / attemptedInCategory) * 100 : 0,
+                correctCount: stats.correct,
+                incorrectCount: stats.incorrect,
+                skippedCount: stats.skipped,
+                totalCount: stats.total,
+            };
+        });
 
         const result: TestResult = {
             id: session.id,
@@ -181,7 +190,7 @@ export function TestInterface({ testId }: { testId: string }) {
             performanceBreakdown,
         };
         
-        const finalSession: TestSession = { ...session, userId: user.uid, endTime: endTime };
+        const finalSession: TestSession = { ...session, userId: user.uid, endTime: endTime, userAnswers: session.userAnswers.map(ua => ({...ua, selectedOption: ua.selectedOption === undefined ? null : ua.selectedOption})) };
         
         const batch = writeBatch(firestore);
 
