@@ -57,27 +57,27 @@ Within those subjects, specifically cover this topic: "{{topic}}".
 **USER SUGGESTION:** The user has provided the following specific instructions. Adhere to them carefully: "{{suggestion}}"
 {{/if}}
 
-**VERY IMPORTANT INSTRUCTIONS FOR ACCURACY:**
+**VERY IMPORTANT INSTRUCTIONS FOR MATH & LATEX FORMATTING:**
 
-1.  **Chain of Thought Process:** Before creating the options, first, think step-by-step to formulate the question text, determine its subject and topic, find the single, unambiguously correct answer, and create a detailed explanation. Only after this internal verification should you create the multiple-choice options. Ensure one option is 100% correct and the others are plausible but incorrect distractors.
+1.  **LaTeX for Formulas Only:**
+    - **USE** single dollar signs ($...$) for inline mathematical formulas (e.g., $a^2 + b^2 = c^2$).
+    - **USE** double dollar signs ($$..$$) for block-level mathematical formulas (e.g., $$ \\frac{a}{b} $$).
+    - **DO NOT** wrap standalone numbers, quantities, currency symbols (₹, $), or years in dollar signs. For example, write "₹15000", "10%", "the year 2023" as plain text, NOT "$₹15000$", "$10\\%$", or "$2023$". This is a critical rendering requirement. The dollar signs should only be used for actual LaTeX code.
+    - **VERIFY** that your LaTeX is valid. For example, \`\\frac{10}{100}\` is correct, \`\\frac{10} {100}\` is not. Ensure all brackets are closed.
 
-2.  **Subject-Specific Rules:** For each question you generate, apply the following rules based on its subject:
-    When a question's subject is "Quantitative Aptitude" or "Mathematics":
-    - **CRITICAL FOR RENDERING:** Wrap all mathematical formulas and expressions in single dollar signs for inline math (e.g., $x^2 + y^2 = r^2$) and double dollar signs for block-level math. For example: $$ \\frac{a}{b} $$. This is absolutely essential for the formulas to display correctly.
-    - Solve the question yourself step-by-step to ensure the correct answer is generated accurately before creating the options.
+2.  **Chain of Thought Process:** Before creating the options, first, think step-by-step to formulate the question text, determine its subject and topic, find the single, unambiguously correct answer, and create a detailed explanation. Only after this internal verification should you create the multiple-choice options. Ensure one option is 100% correct and the others are plausible but incorrect distractors.
 
-    When a question's subject is "English Language & Comprehension" or "English":
-    - Strictly adhere to established grammar rules, like those found in Wren & Martin. Avoid using ambiguous synonyms or idioms in a way that could have multiple interpretations.
-
-    When a question's subject is "General Intelligence & Reasoning" or "Reasoning":
-    - Double-check the logic of any patterns (e.g., in number or letter series). The logic must be consistent and not open to interpretation. Verify your own logic before finalizing the question.
+3.  **Subject-Specific Rules:**
+    - For "Quantitative Aptitude" or "Mathematics": Solve the question yourself step-by-step to ensure the correct answer is generated accurately before creating the options.
+    - For "English": Strictly adhere to established grammar rules.
+    - For "Reasoning": Double-check the logic of any patterns to ensure it's not open to interpretation.
 
 Your final output **MUST** be a JSON array of question objects. Each object must have:
-- 'questionText': The question itself. Ensure all math expressions are wrapped in dollar signs ($...$ or $$...$$).
-- 'options': An array of exactly four distinct answer choices.
-- 'correctAnswerIndex': The 0-indexed number (0, 1, 2, or 3) corresponding to the correct answer in the 'options' array.
-- 'explanation': Provide a detailed, step-by-step explanation in simple, easy-to-understand language. First, explain the conventional method. Then, if a faster method exists, add a section titled "**Short Trick:**" and explain the shortcut. **Ensure all mathematical expressions are in LaTeX format and correctly wrapped in dollar signs ($...$ for inline and $$...$$ for block) for proper rendering.**
-- 'subject': The subject this question belongs to from the provided list of subjects.
+- 'questionText': The question itself. Adhere strictly to the LaTeX formatting rules above.
+- 'options': An array of exactly four distinct answer choices. These should be plain text and should NOT contain dollar signs unless they are part of a valid LaTeX formula.
+- 'correctAnswerIndex': The 0-indexed number (0, 1, 2, or 3) corresponding to the correct answer.
+- 'explanation': A detailed, step-by-step explanation. First, explain the conventional method. Then, if a faster method exists, add a section titled "**Short Trick:**" and explain the shortcut. **All mathematical expressions and formulas in the explanation must be in valid LaTeX format and correctly wrapped in dollar signs ($...$ for inline and $$...$$ for block).**
+- 'subject': The subject this question belongs to.
 - 'topic': The specific topic this question belongs to.
 
 Ensure the questions are relevant, clear, and unambiguous.
