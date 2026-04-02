@@ -60,13 +60,13 @@ Within those subjects, specifically cover this topic: "{{topic}}".
 **VERY IMPORTANT INSTRUCTIONS FOR JSON, MATH & LATEX FORMATTING:**
 
 1.  **JSON Backslash Escaping:** This is the most critical rule. Because your output is inside a JSON string, every single backslash \`\\\` in your LaTeX code MUST be written as a double backslash \`\\\\\`.
-    - For example, to render a fraction, you MUST write \`\\\\\\\\frac{a}{b}\`. To render \`\\\\left(\`, you must write \`\\\\\\\\left(\`.
+    - For example, to render a fraction, you MUST write \`\\\\frac{a}{b}\`. To render \`\\left(\`, you must write \`\\\\left(\`.
     - Every LaTeX command (\`\\\\frac\`, \`\\\\left\`, \`\\\\right\`, \`\\\\times\`, \`\\\\sqrt\`, etc.) must begin with a **double backslash**.
 
 2.  **LaTeX for Formulas Only:**
     - **USE** single dollar signs (\`$...$\`) for inline mathematical formulas (e.g., \`$a^2 + b^2 = c^2$\`).
-    - **USE** double dollar signs (\`$$...$$\`) for block-level mathematical formulas (e.g., \`$$ \\\\\\\\frac{a}{b} $$\`).
-    - **DO NOT** wrap standalone numbers, quantities, currency symbols (₹, $), or years in dollar signs. For example, write "₹15000", "10%", "the year 2023" as plain text, NOT "\`$₹15000$\`", "\`$10\\\\\\\\%\`", or "\`$2023$\`". Dollar signs are ONLY for actual LaTeX math.
+    - **USE** double dollar signs (\`$$...$$\`) for block-level mathematical formulas (e.g., \`$$ \\\\frac{a}{b} $$\`).
+    - **DO NOT** wrap standalone numbers, quantities, currency symbols (₹, $), or years in dollar signs. For example, write "₹15000", "10%", "the year 2023" as plain text, NOT "\`$₹15000$\`", "\`$10\\\\%\`", or "\`$2023$\`". Dollar signs are ONLY for actual LaTeX math.
     - **VERIFY** that your LaTeX is valid. Ensure all brackets are closed.
 
 3.  **Chain of Thought Process:** Before creating the JSON, first, think step-by-step to formulate the question text, determine its subject and topic, find the single, unambiguously correct answer, and create a detailed explanation. Only after this internal verification should you create the multiple-choice options. Ensure one option is 100% correct and the others are plausible but incorrect distractors.
