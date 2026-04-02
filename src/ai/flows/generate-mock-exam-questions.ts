@@ -57,17 +57,19 @@ Within those subjects, specifically cover this topic: "{{topic}}".
 **USER SUGGESTION:** The user has provided the following specific instructions. Adhere to them carefully: "{{suggestion}}"
 {{/if}}
 
-**VERY IMPORTANT INSTRUCTIONS FOR MATH & LATEX FORMATTING:**
+**VERY IMPORTANT INSTRUCTIONS FOR JSON, MATH & LATEX FORMATTING:**
 
-1.  **LaTeX for Formulas Only:**
+1.  **JSON Backslash Escaping:** Since the output is JSON, all backslashes (\`\\\`) inside strings MUST be escaped with another backslash. For any LaTeX command, use a double backslash. For example, to render a fraction, you must write \`\\\\\\\\frac{a}{b}\` in your response. This is the most critical rule.
+
+2.  **LaTeX for Formulas Only:**
     - **USE** single dollar signs ($...$) for inline mathematical formulas (e.g., $a^2 + b^2 = c^2$).
-    - **USE** double dollar signs ($$..$$) for block-level mathematical formulas (e.g., $$ \\frac{a}{b} $$).
-    - **DO NOT** wrap standalone numbers, quantities, currency symbols (₹, $), or years in dollar signs. For example, write "₹15000", "10%", "the year 2023" as plain text, NOT "$₹15000$", "$10\\%$", or "$2023$". This is a critical rendering requirement. The dollar signs should only be used for actual LaTeX code.
-    - **VERIFY** that your LaTeX is valid. For example, \`\\frac{10}{100}\` is correct, \`\\frac{10} {100}\` is not. Ensure all brackets are closed.
+    - **USE** double dollar signs ($$..$$) for block-level mathematical formulas (e.g., $$ \\\\frac{a}{b} $$).
+    - **DO NOT** wrap standalone numbers, quantities, currency symbols (₹, $), or years in dollar signs. For example, write "₹15000", "10%", "the year 2023" as plain text, NOT "$₹15000$", "$10\\\\%$", or "$2023$". The dollar signs should only be used for actual LaTeX code.
+    - **VERIFY** that your LaTeX is valid. For example, \`\\\\frac{10}{100}\` is correct. Ensure all brackets are closed.
 
-2.  **Chain of Thought Process:** Before creating the options, first, think step-by-step to formulate the question text, determine its subject and topic, find the single, unambiguously correct answer, and create a detailed explanation. Only after this internal verification should you create the multiple-choice options. Ensure one option is 100% correct and the others are plausible but incorrect distractors.
+3.  **Chain of Thought Process:** Before creating the options, first, think step-by-step to formulate the question text, determine its subject and topic, find the single, unambiguously correct answer, and create a detailed explanation. Only after this internal verification should you create the multiple-choice options. Ensure one option is 100% correct and the others are plausible but incorrect distractors.
 
-3.  **Subject-Specific Rules:**
+4.  **Subject-Specific Rules:**
     - For "Quantitative Aptitude" or "Mathematics": Solve the question yourself step-by-step to ensure the correct answer is generated accurately before creating the options.
     - For "English": Strictly adhere to established grammar rules.
     - For "Reasoning": Double-check the logic of any patterns to ensure it's not open to interpretation.
@@ -76,7 +78,7 @@ Your final output **MUST** be a JSON array of question objects. Each object must
 - 'questionText': The question itself. Adhere strictly to the LaTeX formatting rules above.
 - 'options': An array of exactly four distinct answer choices. These should be plain text and should NOT contain dollar signs unless they are part of a valid LaTeX formula.
 - 'correctAnswerIndex': The 0-indexed number (0, 1, 2, or 3) corresponding to the correct answer.
-- 'explanation': A detailed, step-by-step explanation. First, explain the conventional method. Then, if a faster method exists, add a section titled "**Short Trick:**" and explain the shortcut. **All mathematical expressions and formulas in the explanation must be in valid LaTeX format and correctly wrapped in dollar signs ($...$ for inline and $$...$$ for block).**
+- 'explanation': A detailed, step-by-step explanation. First, explain the conventional method. Then, if a faster method exists, add a section titled "**Short Trick:**" and explain the shortcut. **All mathematical expressions and formulas in the explanation must be in valid, backslash-escaped LaTeX format and correctly wrapped in dollar signs ($...$ for inline and $$...$$ for block).**
 - 'subject': The subject this question belongs to.
 - 'topic': The specific topic this question belongs to.
 
