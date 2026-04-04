@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -514,9 +513,17 @@ export function TestSetupForm() {
         
         <div className="pt-2 animate-in fade-in-0 slide-in-from-bottom-8 duration-700 ease-out" style={{ animationDelay: '700ms' }}>
             <Button type="submit" size="lg" disabled={isPending} className="w-full text-lg h-14 rounded-full shadow-lg shadow-primary/30 transition-transform duration-300 hover:scale-105">
-                {isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                {isPending ? 'Generating Test...' : 'Start Mock Test'}
-                {!isPending && <ArrowRight className="ml-2 h-5 w-5 />}
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Generating Test...
+                </>
+              ) : (
+                <>
+                  Start Mock Test
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </>
+              )}
             </Button>
         </div>
       </form>
