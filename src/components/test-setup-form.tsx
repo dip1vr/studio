@@ -51,7 +51,7 @@ import { Separator } from "./ui/separator";
 const formSchema = z.object({
   exam: z.string({ required_error: "Please select an exam." }),
   subjects: z.array(z.string()).optional(),
-  topic: z.string().optional(),
+  topics: z.array(z.string()).optional(),
   numberOfQuestions: z.number().min(5).max(100),
   difficulty: z.enum(DIFFICULTIES),
   language: z.enum(LANGUAGES),
@@ -99,7 +99,7 @@ export function TestSetupForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       subjects: [],
-      topic: undefined,
+      topics: [],
       numberOfQuestions: 10,
       difficulty: "Medium",
       language: "English",
@@ -128,16 +128,20 @@ export function TestSetupForm() {
   }, [watchAllFields.exam]);
 
   useEffect(() => {
-    if (watchAllFields.exam && watchAllFields.subjects && watchAllFields.subjects.length === 1) {
-        const availableTopics = TOPICS[watchAllFields.exam]?.[watchAllFields.subjects[0]] || [];
-        setTopics(availableTopics);
-        const currentTopic = form.getValues('topic');
-        if (currentTopic && !availableTopics.includes(currentTopic)) {
-            form.setValue('topic', undefined);
+    if (watchAllFields.exam && watchAllFields.subjects && watchAllFields.subjects.length > 0) {
+        const allAvailableTopics = watchAllFields.subjects.flatMap(subject => TOPICS[watchAllFields.exam]?.[subject] || []);
+        const uniqueTopics = [...new Set(allAvailableTopics)];
+        setTopics(uniqueTopics);
+        
+        const currentTopics = form.getValues('topics') || [];
+        const validTopics = currentTopics.filter(t => uniqueTopics.includes(t));
+        
+        if (validTopics.length !== currentTopics.length) {
+            form.setValue('topics', validTopics);
         }
     } else {
         setTopics([]);
-        form.setValue('topic', undefined);
+        form.setValue('topics', []);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchAllFields.exam, watchAllFields.subjects]);
@@ -159,7 +163,7 @@ export function TestSetupForm() {
         const questions = await generateMockExamQuestions({
           exam: values.exam,
           subjects: values.subjects && values.subjects.length > 0 ? values.subjects : undefined,
-          topic: values.topic,
+          topics: values.topics && values.topics.length > 0 ? values.topics : undefined,
           numberOfQuestions: values.numberOfQuestions,
           difficulty: values.difficulty,
           language: values.language,
@@ -287,32 +291,60 @@ export function TestSetupForm() {
                 />
                 <FormField
                     control={form.control}
-                    name="topic"
+                    name="topics"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel className="flex items-center gap-2 text-base"><Target className="w-5 h-5 text-primary"/> Topic</FormLabel>
-                        <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            disabled={topics.length === 0}
-                        >
-                            <FormControl>
-                            <SelectTrigger className="bg-background/70 transition-all duration-200 hover:border-primary/40">
-                                <SelectValue placeholder="Select a topic" />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                            {topics.map((t) => (
-                                <SelectItem key={t} value={t}>
-                                {t}
-                                </SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
-                        <FormDescription className="text-xs">
-                            Select a single subject to enable topics.
-                        </FormDescription>
-                        <FormMessage />
+                            <FormLabel className="flex items-center gap-2 text-base"><Target className="w-5 h-5 text-primary"/> Topics</FormLabel>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                <FormControl>
+                                    <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "w-full justify-start text-left font-normal h-auto min-h-10 py-2 bg-background/70 transition-all duration-200 hover:border-primary/40",
+                                        !field.value?.length && "text-muted-foreground"
+                                    )}
+                                    disabled={topics.length === 0}
+                                    >
+                                    {field.value?.length > 0 ? (
+                                        <div className="flex gap-1.5 flex-wrap">
+                                            {field.value.map(val => (
+                                                <div key={val} className="truncate rounded-md bg-secondary text-secondary-foreground px-2 py-0.5 text-xs">
+                                                    {val}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        "Select topics (optional)"
+                                    )}
+                                    </Button>
+                                </FormControl>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" align="start">
+                                    <DropdownMenuLabel>Available Topics</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <ScrollArea className="h-48">
+                                        {topics.map(topic => (
+                                            <DropdownMenuCheckboxItem
+                                            key={topic}
+                                            checked={field.value?.includes(topic)}
+                                            onCheckedChange={(checked) => {
+                                                const selected = field.value || [];
+                                                return checked
+                                                ? field.onChange([...selected, topic])
+                                                : field.onChange(selected.filter(s => s !== topic));
+                                            }}
+                                            >
+                                            {topic}
+                                            </DropdownMenuCheckboxItem>
+                                        ))}
+                                    </ScrollArea>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <FormDescription className="text-xs">
+                                Select one or more subjects to enable topics.
+                            </FormDescription>
+                            <FormMessage />
                         </FormItem>
                     )}
                 />
@@ -368,7 +400,7 @@ export function TestSetupForm() {
                         <FormItem>
                             <div className="flex justify-between items-center mb-2">
                                 <FormLabel className="flex items-center gap-2 text-base md:text-lg"><TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-primary"/>Difficulty Level</FormLabel>
-                                <span className="inline-block px-3 py-1 text-sm font-semibold text-red-800 bg-red-200 rounded-full dark:bg-red-900 dark:text-red-300">{field.value}</span>
+                                <span className="inline-block px-3 py-1 text-sm font-semibold text-primary-foreground bg-primary/80 rounded-full">{field.value}</span>
                             </div>
                             <FormControl>
                                 <Slider
@@ -484,7 +516,7 @@ export function TestSetupForm() {
             <Button type="submit" size="lg" disabled={isPending} className="w-full text-lg h-14 rounded-full shadow-lg shadow-primary/30 transition-transform duration-300 hover:scale-105">
                 {isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                 {isPending ? 'Generating Test...' : 'Start Mock Test'}
-                {!isPending && <ArrowRight className="ml-2 h-5 w-5" />}
+                {!isPending && <ArrowRight className="ml-2 h-5 w-5 />}
             </Button>
         </div>
       </form>

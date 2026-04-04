@@ -17,7 +17,7 @@ import {z} from 'genkit';
 const GenerateMockExamQuestionsInputSchema = z.object({
   exam: z.string().describe('The name of the Indian Government Exam.'),
   subjects: z.array(z.string()).optional().describe('A list of subjects for the questions (optional).'),
-  topic: z.string().optional().describe('A specific topic within the subjects (optional).'),
+  topics: z.array(z.string()).optional().describe('A list of specific topics within the subjects (optional).'),
   difficulty: z.enum(['Easy', 'Medium', 'Hard', 'Mixed']).describe('The difficulty level of the questions.'),
   numberOfQuestions: z.number().int().min(1).max(100).describe('The number of questions to generate.'),
   language: z.enum(['English', 'Hindi', 'Bilingual']).describe('The language for the questions and options.'),
@@ -49,8 +49,8 @@ The difficulty level should be "{{difficulty}}".
 {{#if subjects}}
 Focus on the following subjects: {{#each subjects}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}.
 {{/if}}
-{{#if topic}}
-Within those subjects, specifically cover this topic: "{{topic}}".
+{{#if topics}}
+Within those subjects, specifically cover these topics: {{#each topics}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}.
 {{/if}}
 
 {{#if suggestion}}
